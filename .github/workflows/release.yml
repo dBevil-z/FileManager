@@ -1,0 +1,107 @@
+name: Publish signed Linux release
+on:
+  push:
+    tags: ["v[0-9]*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing stable version tag, e.g. v0.2.4
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+jobs:
+  checks:
+    uses: ./.github/workflows/linux.yml
+    with:
+      ref: ${{ inputs.tag || github.ref_name }}
+  publish:
+    name: Sign and publish · Linux x86_64
+    needs: checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - name: Validate tag input
+        run: |
+          python3 - <<'PY'
+          import os, re
+          if not re.fullmatch(r'v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)', os.environ['RELEASE_TAG']):
+              raise SystemExit('Use a stable vMAJOR.MINOR.PATCH tag')
+          PY
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          fetch-depth: 0
+      - name: Check tag, versions and signing setup
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          PRIVATE_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          test -n "$PRIVATE_KEY" && test -n "$PRIVATE_PASSWORD"
+          test "$(git rev-parse HEAD)" = "$(git rev-list -n 1 "$RELEASE_TAG")"
+          python3 scripts/release.py check-version --tag "$RELEASE_TAG"
+          python3 - <<'PY'
+          import json, os, subprocess
+          r = subprocess.run(['gh','api','repos/' + os.environ['GITHUB_REPOSITORY'] + '/releases/tags/' + os.environ['RELEASE_TAG']], capture_output=True, text=True)
+          if r.returncode != 0 and 'HTTP 404' not in r.stderr:
+              raise SystemExit('Could not read existing release state; refusing to continue.')
+          if r.returncode == 0 and not json.loads(r.stdout)['draft']:
+              raise SystemExit('This release is already public. Publish a new version; never replace public assets.')
+          PY
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev patchelf libgtk-3-dev libx11-dev
+      - run: pnpm install --frozen-lockfile
+      - name: Build signed packages and user-install artifact
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          pnpm tauri build --bundles deb,appimage -- --locked
+          python3 scripts/release.py prepare --tag "$RELEASE_TAG"
+      - name: Validate installer versions and checksums
+        run: |
+          ./target/release/filemanager --version
+          test "$(./target/release/filemanager --version)" = "FileManager ${RELEASE_TAG#v}"
+          test "$(dpkg-deb -f "target/release/bundle/deb/FileManager_${RELEASE_TAG#v}_amd64.deb" Version)" = "${RELEASE_TAG#v}"
+          python3 scripts/release.py verify --tag "$RELEASE_TAG"
+          cargo test -p filemanager prepared_release_signatures_match_the_embedded_public_key --locked -- --ignored --nocapture
+      - name: Preserve verified assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: FileManager-${{ env.RELEASE_TAG }}-linux-x86_64
+          path: target/release/bundle/publish/${{ env.RELEASE_TAG }}/*
+          if-no-files-found: error
+      - name: Publish complete release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --draft --title "FileManager ${RELEASE_TAG#v}" --notes-file "docs/releases/$RELEASE_TAG.md"
+          fi
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" > /tmp/filemanager-release.json
+          python3 - <<'PY'
+          import json
+          if not json.load(open('/tmp/filemanager-release.json'))['draft']:
+              raise SystemExit('Release became public during the build; refuse to replace public assets.')
+          PY
+          gh release upload "$RELEASE_TAG" "target/release/bundle/publish/$RELEASE_TAG/"* --repo "$GITHUB_REPOSITORY" --clobber
+          gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false --prerelease=false --latest --notes-file "docs/releases/$RELEASE_TAG.md"

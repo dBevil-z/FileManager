@@ -1,3 +1,6 @@
+import { useViewMemory, useViewState } from "../hooks/useViewState";
+import { useViewScroll } from "../hooks/useViewScroll";
+import { viewKey } from "../lib/view-memory";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
@@ -32,16 +35,33 @@ import {
 
 type Connection = { id: string; revision: number; bucket?: string };
 
+type CachedPages = {
+  pages: { number: number; listing: Listing }[];
+  index: number;
+  cursor: string | null;
+  loadedAt: number;
+};
 function useRemotePages(conn: Connection, path: string) {
-  const [pages, setPages] = useState<{ number: number; listing: Listing }[]>(
-    [],
+  const memory = useViewMemory();
+  const scope = viewKey(
+    "remote-pages",
+    conn.id,
+    conn.revision,
+    conn.bucket || "",
+    path,
   );
+  const [pages, setPages] = useState<CachedPages["pages"]>([]);
   const [index, setIndex] = useState(0);
+  const [loadedScope, setLoadedScope] = useState("");
   const [loading, setLoading] = useState(true);
+  const [restoring, setRestoring] = useState(0);
   const [error, setError] = useState("");
   const generation = useRef(0);
   const cursor = useRef<string | null>(null);
   const active = useRef(false);
+  const loadedAt = useRef(0);
+  const latest = useRef({ scope: loadedScope, pages, index, error });
+  latest.current = { scope: loadedScope, pages, index, error };
   const closeCursor = useCallback(
     (token: string | null) => {
       if (token)
@@ -51,48 +71,102 @@ function useRemotePages(conn: Connection, path: string) {
     },
     [conn.id],
   );
-  const refresh = useCallback(async () => {
-    const version = ++generation.current;
-    closeCursor(cursor.current);
-    cursor.current = null;
-    setLoading(true);
-    active.current = true;
-    setError("");
-    setPages([]);
-    setIndex(0);
-    try {
-      const listing = await request<Listing>("remote_list", {
-        ...conn,
-        path,
-        page_size: 100,
-      });
-      if (version !== generation.current) {
-        closeCursor(listing.next_cursor);
-        return;
-      }
-      cursor.current = listing.next_cursor;
-      setPages([{ number: 1, listing }]);
-    } catch (e) {
-      if (version === generation.current) setError(errorText(e));
-    } finally {
-      if (version === generation.current) {
-        setLoading(false);
-        active.current = false;
-      }
-    }
-  }, [conn.id, conn.revision, conn.bucket, path, closeCursor]);
-  useEffect(() => {
-    void refresh();
-    return () => {
-      generation.current++;
+  const refresh = useCallback(
+    async (resume = false) => {
+      const version = ++generation.current;
+      const saved = resume ? memory.get<number>(scope + ":page") : 1;
+      const target =
+        typeof saved === "number" && Number.isInteger(saved)
+          ? Math.max(1, Math.min(1000, saved))
+          : 1;
       closeCursor(cursor.current);
       cursor.current = null;
+      active.current = true;
+      setLoading(true);
+      setError("");
+      setPages([]);
+      setIndex(0);
+      setRestoring(target > 1 ? target : 0);
+      try {
+        let window: CachedPages["pages"] = [];
+        for (let number = 1; number <= target; number++) {
+          const token: string | null = cursor.current;
+          const listing: Listing = await request<Listing>("remote_list", {
+            ...conn,
+            path,
+            page_size: 100,
+            ...(token ? { cursor: token } : {}),
+          });
+          if (version !== generation.current) {
+            closeCursor(listing.next_cursor);
+            return;
+          }
+          cursor.current = listing.next_cursor;
+          loadedAt.current = Date.now();
+          window = [...window, { number, listing }].slice(-20);
+          setPages(window);
+          setIndex(window.length - 1);
+          setLoadedScope(scope);
+          if (!listing.next_cursor) break;
+        }
+        memory.set(scope + ":page", window.at(-1)?.number || 1);
+      } catch (e) {
+        if (version === generation.current) setError(errorText(e));
+      } finally {
+        if (version === generation.current) {
+          setLoading(false);
+          active.current = false;
+          setRestoring(0);
+        }
+      }
+    },
+    [scope, conn.id, conn.revision, conn.bucket, path, closeCursor, memory],
+  );
+  useEffect(() => {
+    const saved = memory.takeRuntime<CachedPages>(scope);
+    if (saved) {
+      generation.current++;
+      cursor.current = saved.cursor;
+      loadedAt.current = saved.loadedAt;
+      setPages(saved.pages);
+      setIndex(saved.index);
+      setLoadedScope(scope);
+      setLoading(false);
+      setRestoring(0);
+      setError("");
+      active.current = false;
+    } else void refresh(true);
+    return () => {
+      generation.current++;
+      const token = cursor.current;
+      cursor.current = null;
+      const value = latest.current;
+      if (
+        value.scope === scope &&
+        value.pages.length &&
+        !value.error &&
+        !active.current
+      ) {
+        // Keep a bounded metadata window for a quick return; never persist tokens.
+        memory.cacheRuntime(
+          scope,
+          {
+            pages: value.pages,
+            index: value.index,
+            cursor: token,
+            loadedAt: loadedAt.current,
+          },
+          () => closeCursor(token),
+          240_000 - (Date.now() - loadedAt.current),
+        );
+      } else closeCursor(token);
     };
-  }, [refresh, closeCursor]);
+  }, [scope, refresh, closeCursor, memory]);
   const next = async () => {
     if (active.current) return;
     if (index + 1 < pages.length) {
       setIndex(index + 1);
+      memory.set(scope + ":page", pages[index + 1].number);
       return;
     }
     const token = cursor.current;
@@ -113,12 +187,12 @@ function useRemotePages(conn: Connection, path: string) {
         return;
       }
       cursor.current = listing.next_cursor;
-      const updated = [
-        ...pages,
-        { number: (pages.at(-1)?.number ?? 0) + 1, listing },
-      ].slice(-20);
+      loadedAt.current = Date.now();
+      const number = (pages.at(-1)?.number || 0) + 1;
+      const updated = [...pages, { number, listing }].slice(-20);
       setPages(updated);
       setIndex(updated.length - 1);
+      memory.set(scope + ":page", number);
     } catch (e) {
       if (version === generation.current) setError(errorText(e));
     } finally {
@@ -128,21 +202,30 @@ function useRemotePages(conn: Connection, path: string) {
       }
     }
   };
+  const reload = useCallback(() => refresh(false), [refresh]);
   return {
-    listing: pages[index]?.listing,
-    number: pages[index]?.number ?? 1,
-    loading,
+    listing: loadedScope === scope ? pages[index]?.listing : undefined,
+    number: loadedScope === scope ? pages[index]?.number || 1 : 1,
+    loading: loading || loadedScope !== scope,
+    restoring,
     error,
-    refresh,
+    refresh: reload,
     next,
-    previous: () => setIndex(Math.max(0, index - 1)),
+    previous: () => {
+      const next = Math.max(0, index - 1);
+      setIndex(next);
+      memory.set(scope + ":page", pages[next]?.number || 1);
+    },
     hasPrevious: index > 0,
     hasNext: index + 1 < pages.length || Boolean(cursor.current),
   };
 }
 
 export function RemoteBrowser({ profile }: { profile: Profile }) {
-  const [bucket, setBucket] = useState<string | null>(null);
+  const [bucket, setBucket] = useViewState<string | null>(
+    viewKey("remote", profile.id, profile.revision, "bucket"),
+    null,
+  );
   const provider = profile.config.provider;
   const allBuckets =
     (provider.kind === "minio" || provider.kind === "s3") && !provider.bucket;
@@ -170,11 +253,19 @@ function BucketList({
   profile: Profile;
   enter: (bucket: string) => void;
 }) {
-  const [query, setQuery] = useState("");
+  const scope = viewKey("remote-buckets", profile.id, profile.revision);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [query, setQuery] = useViewState(scope + ":query", "");
   const [manual, setManual] = useState("");
   const data = useRemotePages(
     { id: profile.id, revision: profile.revision },
     "",
+  );
+  useViewScroll(
+    scrollRef,
+    viewKey(scope, data.number),
+    !data.loading,
+    ".feature-page",
   );
   const entries =
     data.listing?.entries.filter((e) =>
@@ -203,7 +294,7 @@ function BucketList({
   );
   return (
     <>
-      <div className="remote-toolbar">
+      <div className="remote-toolbar" ref={scrollRef}>
         <h3>{t("所有 Bucket")}</h3>
         <IconButton
           label={t("刷新 Bucket 列表")}
@@ -248,7 +339,20 @@ function BucketList({
       {data.error ? (
         <ErrorState error={t(data.error)} retry={() => void data.refresh()} />
       ) : data.loading ? (
-        <Loading />
+        <div>
+          <Loading
+            label={
+              data.restoring
+                ? t("正在恢复第 {0} 页…", data.restoring)
+                : undefined
+            }
+          />
+          {data.restoring > 0 && (
+            <Button onClick={() => void data.refresh()}>
+              {t("从第一页打开")}
+            </Button>
+          )}
+        </div>
       ) : !entries.length ? (
         <Empty
           icon={<Database size={26} aria-hidden="true" />}
@@ -307,9 +411,22 @@ function RemoteFiles({
   bucket?: string;
 }) {
   const app = useApp();
-  const [path, setPath] = useState("");
-  const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState<string[]>([]);
+  const base = viewKey(
+    "remote-files",
+    profile.id,
+    profile.revision,
+    bucket || "",
+  );
+  const [path, setPath] = useViewState(base + ":path", "");
+  const scope = viewKey(base, path);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [query, setQuery] = useViewState(scope + ":query", "");
+  const [selected, setSelected] = useViewState<string[]>(
+    scope + ":selected",
+    [],
+    (v): v is string[] =>
+      Array.isArray(v) && v.every((p) => typeof p === "string"),
+  );
   const [busy, setBusy] = useState(false);
   const [sync, setSync] = useState(false);
   const [report, setReport] = useState<string | null>(null);
@@ -324,6 +441,12 @@ function RemoteFiles({
     ...(bucket ? { bucket } : {}),
   };
   const data = useRemotePages(conn, path);
+  useViewScroll(
+    scrollRef,
+    viewKey(scope, data.number),
+    !data.loading,
+    ".feature-page",
+  );
   const listing = data.listing;
   const job = transfer && app.jobs.find((j) => j.id === transfer.id);
   const pending = Boolean(
@@ -350,8 +473,6 @@ function RemoteFiles({
   }, [transfer?.id, jobStatus, refresh]);
   const enter = (next: string) => {
     setPath(next);
-    setQuery("");
-    setSelected([]);
   };
   const visible =
     listing?.entries.filter((e) =>
@@ -450,7 +571,7 @@ function RemoteFiles({
   );
   return (
     <>
-      <div className="remote-toolbar">
+      <div className="remote-toolbar" ref={scrollRef}>
         <nav aria-label={t("远程目录")} className="remote-breadcrumbs">
           <IconButton
             label={t("上级目录")}
@@ -617,7 +738,20 @@ function RemoteFiles({
         <ErrorState error={t(data.error)} retry={() => void refresh()} />
       )}
       {data.loading ? (
-        <Loading label={t("正在读取远程目录…")} />
+        <div>
+          <Loading
+            label={
+              data.restoring
+                ? t("正在恢复第 {0} 页…", data.restoring)
+                : t("正在读取远程目录…")
+            }
+          />
+          {data.restoring > 0 && (
+            <Button onClick={() => void data.refresh()}>
+              {t("从第一页打开")}
+            </Button>
+          )}
+        </div>
       ) : (
         listing && (
           <>

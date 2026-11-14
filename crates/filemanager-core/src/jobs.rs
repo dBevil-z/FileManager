@@ -71,6 +71,10 @@ pub fn progress(current: &str, bytes: u64, completed: u64, total: u64) {
     })
 }
 pub fn start(core: &Core, args: &Value) -> Result<Value> {
+    let admission = core.job_admission.lock().map_err(err)?;
+    if *admission {
+        return Err("应用正在重启，无法加入新的后台任务".into());
+    }
     let op = str_arg(args, "op")?;
     if !matches!(
         op,
@@ -121,6 +125,7 @@ pub fn start(core: &Core, args: &Value) -> Result<Value> {
         }
         jobs.insert(id.clone(), job.clone());
     }
+    drop(admission);
     let core = core.clone();
     let op = op.to_owned();
     let input = json!({"op":op,"args":args["args"]});
@@ -257,6 +262,45 @@ pub fn cancel(core: &Core, args: &Value) -> Result<Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn restart_admission_rejects_new_jobs_after_the_idle_check() {
+        let temp = tempfile::tempdir().unwrap();
+        let core = Core::with_paths(
+            temp.path().join("state"),
+            temp.path().to_owned(),
+            temp.path().join("Trash"),
+        )
+        .unwrap();
+        core.prepare_restart().unwrap();
+        assert!(
+            start(
+                &core,
+                &json!({"op":"folder_size","args":{"path":temp.path()}})
+            )
+            .is_err()
+        );
+    }
+    #[test]
+    fn restart_is_refused_for_a_queued_job_and_can_be_retried_when_it_finishes() {
+        let temp = tempfile::tempdir().unwrap();
+        let core = Core::with_paths(
+            temp.path().join("state"),
+            temp.path().to_owned(),
+            temp.path().join("Trash"),
+        )
+        .unwrap();
+        let job = Arc::new(Job {
+            cancelled: AtomicBool::new(false),
+            state: Mutex::new(json!({"status":"queued"})),
+        });
+        core.jobs
+            .lock()
+            .unwrap()
+            .insert("pending".into(), job.clone());
+        assert!(core.prepare_restart().is_err());
+        job.state.lock().unwrap()["status"] = json!("done");
+        assert!(core.prepare_restart().is_ok());
+    }
     #[test]
     fn status_polling_excludes_heavy_results_and_retention_is_bounded() {
         let t = tempfile::tempdir().unwrap();

@@ -1,3 +1,5 @@
+import { useViewState } from "../hooks/useViewState";
+import { viewKey } from "../lib/view-memory";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import {
   Cloud,
@@ -24,6 +26,7 @@ import { useApp } from "../context";
 import { useAsync } from "../hooks/useAsync";
 import { t } from "../i18n";
 import { RemoteBrowser } from "./RemoteBrowser";
+import { useViewScroll } from "../hooks/useViewScroll";
 
 type SshAuth = "agent" | "key" | "password";
 type Provider =
@@ -523,10 +526,19 @@ function ConnectionEditor({
 export function RemoteStoragePage() {
   const app = useApp();
   const profiles = useAsync(() => request<Profile[]>("remote_profiles"), []);
-  const [selected, setSelected] = useState("");
+  const [selected, setSelected] = useViewState("remote:selected", "");
+  const scrollRef = useRef<HTMLElement>(null);
   const [editing, setEditing] = useState<Profile | null | undefined>();
   const [removing, setRemoving] = useState(false);
   const profile = profiles.data?.find((item) => item.id === selected);
+  useViewScroll(
+    scrollRef,
+    viewKey("remote", selected),
+    Boolean(profiles.data) && (!profile || profile.needs_secret),
+  );
+  useEffect(() => {
+    if (profiles.data && selected && !profile) setSelected("");
+  }, [profiles.data, selected, profile, setSelected]);
   async function remove(item: Profile) {
     setRemoving(true);
     try {
@@ -552,7 +564,7 @@ export function RemoteStoragePage() {
     }
   }
   return (
-    <section className="feature-page remote-page">
+    <section className="feature-page remote-page" ref={scrollRef}>
       <header className="page-heading remote-heading">
         <div className="heading-copy">
           <h2>{t("远程存储")}</h2>

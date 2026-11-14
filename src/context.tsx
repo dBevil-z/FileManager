@@ -14,6 +14,10 @@ export type AppContextValue = {
   catalog: Catalog;
   settings: Settings;
   page: Page;
+  activeMenu: Page;
+  switchMenu: (page: Page, reset?: boolean) => void;
+  resetViewMemory: () => void;
+  restartForUpdate: () => Promise<void>;
   plugins: PluginItem[];
   jobs: Job[];
   runPlugin: (id: string, selection?: string[], directory?: string) => void;

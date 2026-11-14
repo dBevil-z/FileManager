@@ -28,7 +28,7 @@ pnpm tauri build
 
 Native clipboard tests use a separate selection rather than overwriting the user's clipboard. Filesystem tests use temporary data and Trash directories. `FILEMANAGER_TEST_HOME` and `FILEMANAGER_DATA_DIR` isolate development scenarios; do not use real documents as destructive test fixtures.
 
-The Linux workflow runs checks on Ubuntu 24.04. Manual runs and version tags also build deb/AppImage artifacts. It does not automatically create a GitHub Release, and one CI environment is not a compatibility guarantee for other desktops.
+The Linux workflow runs checks on Ubuntu 24.04. Stable tags trigger a separate signed Release workflow after validation. Public assets are immutable. See the [release guide](docs/releases.md); one CI environment does not guarantee other desktop environments.
 
 ## Architecture
 

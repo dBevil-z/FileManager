@@ -1,6 +1,6 @@
 [package]
 name = "filemanager"
-version = "0.2.2"
+version = "0.2.4"
 edition = "2024"
 repository = "https://github.com/dBevil-z/FileManager"
 description = "A thoughtful file manager for Linux"
@@ -24,6 +24,12 @@ url = "2"
 zbus = "5.19"
 webkit2gtk = "2"
 cairo-rs = { version = "0.18", features = ["png"] }
+tauri-plugin-updater = { version = "=2.14.1", default-features = false, features = ["rustls-tls"] }
+tempfile = "3"
 [lib]
 name = "filemanager_desktop"
 crate-type = ["staticlib", "cdylib", "rlib"]
+
+[dev-dependencies]
+tauri = { version = "2", features = ["test"] }
+tiny_http = "0.12"

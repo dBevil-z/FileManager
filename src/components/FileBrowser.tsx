@@ -1,3 +1,6 @@
+import { useViewState } from "../hooks/useViewState";
+import { useViewScroll } from "../hooks/useViewScroll";
+import { viewKey } from "../lib/view-memory";
 import { getLocale, t } from "../i18n";
 import { dragState } from "../lib/drag";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -65,6 +68,7 @@ import {
 type View = "icons" | "list" | "columns";
 type BrowserProps = {
   path: string;
+  memoryKey?: string;
   onNavigate: (path: string) => void;
   active: boolean;
   onActivate: () => void;
@@ -80,6 +84,7 @@ export const command = (name: string) =>
   );
 export function FileBrowser({
   path,
+  memoryKey = "main",
   onNavigate,
   active,
   onActivate,
@@ -89,20 +94,26 @@ export function FileBrowser({
   togglePreview,
 }: BrowserProps) {
   const app = useApp();
-  const [view, setView] = useState<View>(
+  const scope = viewKey("folder", memoryKey, path);
+  const [view, setView] = useViewState<View>(
+    scope + ":view",
     () => (localStorage.getItem("filemanager-view") as View) || "icons",
   );
-  const [hidden, setHidden] = useState(
+  const [hidden, setHidden] = useViewState(
+    scope + ":hidden",
     () => localStorage.getItem("filemanager-browser-hidden") === "true",
   );
-  const [filter, setFilter] = useState("");
-  const [size, setSize] = useState(
+  const [filter, setFilter] = useViewState(scope + ":filter", "");
+  const [size, setSize] = useViewState(
+    scope + ":size",
     () => localStorage.getItem("filemanager-browser-size") || "medium",
   );
-  const [sort, setSort] = useState(
+  const [sort, setSort] = useViewState(
+    scope + ":sort",
     () => localStorage.getItem("filemanager-browser-sort") || "name",
   );
-  const [group, setGroup] = useState(
+  const [group, setGroup] = useViewState(
+    scope + ":group",
     () => localStorage.getItem("filemanager-browser-group") || "none",
   );
   const locale = getLocale();
@@ -113,8 +124,13 @@ export function FileBrowser({
     localStorage.setItem("filemanager-browser-sort", sort);
     localStorage.setItem("filemanager-browser-group", group);
   }, [active, hidden, size, sort, group]);
-  const [selected, setSelected] = useState<string[]>([]);
-  const [anchor, setAnchor] = useState("");
+  const [selected, setSelected] = useViewState<string[]>(
+    scope + ":selected",
+    [],
+    (v): v is string[] =>
+      Array.isArray(v) && v.every((p) => typeof p === "string"),
+  );
+  const [anchor, setAnchor] = useViewState(scope + ":anchor", "");
   const [columnEntries, setColumnEntries] = useState<Entry[]>([]);
   const [loadingMore, setLoadingMore] = useState(false);
   const [menu, setMenu] = useState<{
@@ -122,8 +138,11 @@ export function FileBrowser({
     y: number;
     items: MenuItem[];
   } | null>(null);
-  const [focusSearch, setFocusSearch] = useState(false);
-  const [insights, setInsights] = useState(false);
+  const [focusSearch, setFocusSearch] = useViewState(
+    scope + ":filter-open",
+    () => Boolean(filter),
+  );
+  const [insights, setInsights] = useViewState(scope + ":insights", false);
   const [box, setBox] = useState<{
     x: number;
     y: number;
@@ -143,6 +162,13 @@ export function FileBrowser({
       }),
     [path, hidden, app.refresh],
   );
+  useViewScroll(
+    scroll,
+    viewKey(scope, view, size, sort, group, String(hidden)),
+    load.data?.path === path,
+    undefined,
+    Boolean(reveal),
+  );
   useEffect(() => {
     if (native) return;
     const timer = window.setInterval(() => {
@@ -158,11 +184,7 @@ export function FileBrowser({
   }, [path, load.refresh]);
   useEffect(() => {
     stamp.current = "";
-    load.setData(null);
-    setSelected([]);
     setColumnEntries([]);
-    setFilter("");
-    scroll.current?.scrollTo(0, 0);
   }, [path]);
   useEffect(() => {
     const node = container.current;
@@ -1019,6 +1041,7 @@ export function FileBrowser({
       ) : view === "columns" ? (
         <Columns
           key={path}
+          memoryKey={scope}
           onEntries={setColumnEntries}
           hidden={hidden}
           entries={entries}
@@ -1340,6 +1363,7 @@ function PathBar({
   );
 }
 function Columns({
+  memoryKey,
   entries,
   selected,
   select,
@@ -1348,6 +1372,7 @@ function Columns({
   onEntries,
   hidden,
 }: {
+  memoryKey: string;
   entries: Entry[];
   selected: string[];
   select: (entry: Entry, event: React.MouseEvent) => void;
@@ -1356,9 +1381,24 @@ function Columns({
   onEntries: (entries: Entry[]) => void;
   hidden: boolean;
 }) {
-  const [trail, setTrail] = useState<Entry[]>([]);
+  const [trail, setTrail] = useViewState<Entry[]>(
+    memoryKey + ":columns",
+    [],
+    (v): v is Entry[] =>
+      Array.isArray(v) &&
+      v.length <= 64 &&
+      v.every(
+        (e) =>
+          e &&
+          typeof e.path === "string" &&
+          typeof e.name === "string" &&
+          typeof e.is_dir === "boolean",
+      ),
+  );
   const loaded = useRef(new Map<string, Entry[]>());
   const root = useRef<HTMLDivElement>(null);
+  useViewScroll(root, memoryKey + ":column-scroll");
+  const previousDepth = useRef(trail.length);
   const choose = (entry: Entry, event: React.MouseEvent, level: number) => {
     select(entry, event);
     setTrail((old) => [
@@ -1367,6 +1407,8 @@ function Columns({
     ]);
   };
   useEffect(() => {
+    if (previousDepth.current === trail.length) return;
+    previousDepth.current = trail.length;
     root.current?.scrollTo({
       left: root.current.scrollWidth,
       behavior: "smooth",

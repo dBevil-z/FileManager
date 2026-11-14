@@ -1,6 +1,7 @@
 mod integration;
 mod native;
 mod shelf;
+mod updates;
 use filemanager_core::{Core, Result};
 use serde_json::{Value, json};
 use std::{path::PathBuf, sync::Mutex};
@@ -104,9 +105,11 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_deep_link::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .manage(core)
         .manage(NativeState::default())
+        .manage(updates::UpdateState::default())
         .register_asynchronous_uri_scheme_protocol("filemanager-media", move |_ctx, req, responder| {
             let core = media_core.clone();
             std::thread::spawn(move || {

@@ -28,7 +28,7 @@ pnpm tauri build
 
 原生剪贴板测试使用独立 selection，不覆盖用户剪贴板；文件测试使用临时数据和回收站。`FILEMANAGER_TEST_HOME`、`FILEMANAGER_DATA_DIR` 用于隔离开发场景，不要把真实文档当作破坏性测试夹具。
 
-Linux workflow 在 Ubuntu 24.04 执行检查；手动运行和版本标签还会构建 deb/AppImage 产物。它不会自动创建 GitHub Release，单个 CI 环境也不等于所有桌面均兼容。
+Linux workflow 在 Ubuntu 24.04 执行检查；稳定标签在验证后触发独立的签名 Release 工作流，已公开产物禁止覆盖。见[发布指南](docs/releases.zh-CN.md)，单个 CI 环境不等于所有桌面均兼容。
 
 ## 架构
 

@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Downloads and release notes · 下载与更新日志
+    url: https://github.com/dBevil-z/FileManager/releases/latest
+    about: Download the official Linux packages and read update notes.
+  - name: Usage and installation · 使用与安装
+    url: https://github.com/dBevil-z/FileManager/blob/main/README.zh-CN.md
+    about: English and Chinese guides, features, platform limits and installation.
+  - name: Roadmap · 项目路线图
+    url: https://github.com/dBevil-z/FileManager/blob/main/ROADMAP.zh-CN.md
+    about: See the Linux compatibility, plugin ecosystem and theme plans.

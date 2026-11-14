@@ -43,6 +43,7 @@ pub struct Core {
     pub trash_dir: PathBuf,
     pub(crate) mutation: Arc<Mutex<()>>,
     pub(crate) jobs: jobs::Jobs,
+    pub(crate) job_admission: Arc<Mutex<bool>>,
     pub(crate) job_slots: Arc<(Mutex<usize>, Condvar)>,
     pub(crate) media: Arc<Mutex<std::collections::HashMap<String, PathBuf>>>,
     pub(crate) preview_gate: Arc<Mutex<()>>,
@@ -50,6 +51,22 @@ pub struct Core {
 }
 
 impl Core {
+    /// Seal background-job admission once an update restart has been approved.
+    pub fn prepare_restart(&self) -> Result<()> {
+        // Take the same lock used by job insertion: checking idle and sealing
+        // admission is one operation, including submissions from Shelf/native callers.
+        let mut closed = self.job_admission.lock().map_err(err)?;
+        let jobs = self.jobs.lock().map_err(err)?;
+        for job in jobs.values() {
+            let state = job.state.lock().map_err(err)?;
+            if matches!(state["status"].as_str(), Some("queued" | "running")) {
+                return Err("请先等待后台任务完成，再重启".into());
+            }
+        }
+        *closed = true;
+        Ok(())
+    }
+
     pub fn new(data_dir: PathBuf) -> Result<Self> {
         let home = dirs::home_dir().ok_or("找不到用户主目录")?;
         let trash = dirs::data_local_dir()
@@ -69,6 +86,7 @@ impl Core {
             trash_dir,
             mutation: Arc::new(Mutex::new(())),
             jobs: Arc::new(Mutex::new(std::collections::HashMap::new())),
+            job_admission: Arc::new(Mutex::new(false)),
             job_slots: Arc::new((Mutex::new(0), Condvar::new())),
             media: Arc::new(Mutex::new(std::collections::HashMap::new())),
             preview_gate: Arc::new(Mutex::new(())),

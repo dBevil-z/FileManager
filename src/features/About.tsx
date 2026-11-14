@@ -18,42 +18,15 @@ import { desktop, errorText, native, request } from "../api";
 import { useAsync } from "../hooks/useAsync";
 import { Badge, Button, Modal } from "../components/ui";
 import { shortcutDefaults, shortcutLabels } from "../lib/shortcuts";
-export function repository(url: string) {
-  try {
-    const u = new URL(url);
-    if (
-      u.protocol !== "https:" ||
-      u.hostname !== "github.com" ||
-      u.username ||
-      u.password ||
-      u.search ||
-      u.hash
-    )
-      return null;
-    const parts = u.pathname.split("/").filter(Boolean);
-    if (
-      parts.length < 1 ||
-      parts.length > 2 ||
-      parts.some((p) => !/^[A-Za-z0-9_.-]+$/.test(p) || p === "." || p === "..")
-    )
-      return null;
-    return {
-      url: u.origin + "/" + parts.join("/"),
-      isRepo: parts.length === 2,
-    };
-  } catch {
-    return null;
-  }
-}
+export { repository } from "../lib/project";
+import { project, repository, migrateRepositoryUrl } from "../lib/project";
+import { UpdatePanel } from "./Updates";
 export function AboutPage() {
   const app = useApp();
   const [notes, setNotes] = useState<"help" | "release" | "privacy" | null>(
     null,
   );
-  const repo = repository(app.settings.repositoryUrl) || {
-    url: "https://github.com/dBevil-z",
-    isRepo: false,
-  };
+  const repo = repository(migrateRepositoryUrl(app.settings.repositoryUrl))!;
   const resources = useAsync(
     () =>
       request<{ pss: number | null; rss: number; processes: number }>(
@@ -94,8 +67,17 @@ export function AboutPage() {
             <BookOpen size={14} />
             {t("使用指南")}
           </Button>
+          <Button onClick={() => open(project.guide)}>
+            <ExternalLink size={14} />
+            {t("项目文档")}
+          </Button>
+          <Button onClick={() => open(project.author)}>
+            <Github size={14} />
+            dBevil-z
+          </Button>
         </div>
       </section>
+      <UpdatePanel />
       <div className="about-grid">
         <article>
           <Cpu size={21} />
@@ -157,7 +139,7 @@ export function AboutPage() {
           <div className="about-links">
             <Button
               disabled={!repo.isRepo}
-              onClick={() => open(repo.url + "/issues")}
+              onClick={() => open(repo.url + "/issues/new/choose")}
             >
               <Bug size={13} />
               {t("问题反馈")}
@@ -196,7 +178,7 @@ export function AboutPage() {
             "Linux 优先 · 目前已验证 KDE/X11；其他桌面与发行版按路线图逐步验收。",
           )}
         </p>
-        <p>{t("开源许可证将在首次公开发布前确定；依赖保留各自许可证。")}</p>
+        <p>{t("项目源码许可证尚未选定；依赖保留各自许可证。")}</p>
       </footer>
       {notes && (
         <Modal
@@ -249,6 +231,30 @@ export function AboutPage() {
             </>
           ) : notes === "release" ? (
             <div className="release-notes">
+              <h3>0.2.4 · FileManager</h3>
+              <ul>
+                <li>
+                  {t("按需检查官方版本，下载验证签名后安装，由你选择重启。")}
+                </li>
+                <li>
+                  {t(
+                    "统一 GitHub 仓库、文档、反馈与发行版入口，提供中英发布说明。",
+                  )}
+                </li>
+              </ul>
+              <h3>0.2.3 · FileManager</h3>
+              <ul>
+                <li>
+                  {t(
+                    "切换菜单后恢复目录、筛选、分页和滚动位置，支持关闭和重置。",
+                  )}
+                </li>
+                <li>
+                  {t(
+                    "按连接与 Bucket 记住远程目录，短时缓存有上限并自动释放。",
+                  )}
+                </li>
+              </ul>
               <h3>0.2.2 · FileManager</h3>
               <ul>
                 <li>
@@ -309,7 +315,7 @@ export function AboutPage() {
               <code>{app.boot.data_dir}</code>
               <p>
                 {t(
-                  "网页书签元数据与远程封面、Markdown 中的远程图片可能访问对应网站。GitHub 和外部帮助仅在主动点击后使用系统浏览器打开。无后台遥测、自动上传或云端文件索引。",
+                  "网页书签元数据与远程封面、Markdown 中的远程图片可能访问对应网站。更新仅在主动检查时连接官方 GitHub Releases，安装包在签名验证后使用。GitHub 和外部帮助使用系统浏览器打开。无后台遥测、自动上传或云端文件索引。",
                 )}
               </p>
               <p>

@@ -3948,6 +3948,83 @@
   align-items: center;
   flex-wrap: wrap;
 }
+.update-panel {
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  padding: 22px 24px;
+  margin: 0 0 18px;
+}
+.update-panel-heading {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+.update-emblem {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+}
+.update-panel h3 {
+  margin: 0 0 5px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.update-panel p,
+.update-panel small {
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--text-2);
+}
+.update-description {
+  margin: 12px 0;
+}
+.update-result strong {
+  display: inline-block;
+  margin-right: 12px;
+  font-size: 13px;
+}
+.update-notes {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.8;
+  max-height: 220px;
+  overflow: auto;
+  color: var(--text-2);
+  margin: 12px 0;
+  padding: 14px 16px;
+  background: var(--surface-2);
+  border-radius: 8px;
+}
+.update-progress {
+  margin: 12px 0;
+}
+.update-progress progress {
+  width: 100%;
+  height: 6px;
+  accent-color: var(--accent);
+}
+.update-panel .update-error {
+  color: var(--danger);
+  overflow-wrap: anywhere;
+  margin-bottom: 12px;
+}
+.update-panel .update-success {
+  color: var(--success);
+  margin: 12px 0;
+}
+.update-panel > .about-links {
+  margin-top: 14px;
+}
+.settings-page .update-panel {
+  margin-top: 14px;
+}
 .about-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -1,5 +1,7 @@
+import { useViewState } from "../hooks/useViewState";
+import { viewKey } from "../lib/view-memory";
 import { t } from "../i18n";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Archive,
   ArrowDownToLine,
@@ -61,13 +63,34 @@ export function Clean({
   initialCategory?: string;
 }) {
   const app = useApp();
+  const memoryKey = viewKey("clean", scope || "", initialCategory || "");
+  const [scanId, setScanId] = useViewState<string | null>(
+    "transient:" + memoryKey + ":scan",
+    null,
+  );
   const [result, setResult] = useState<any>(null);
-  const [job, setJob] = useState<string | null>(null);
+  const [job, setJob] = useState<string | null>(scanId);
   const [progress, setProgress] = useState<Job | null>(null);
-  const [category, setCategory] = useState(initialCategory || "duplicates");
-  const [offset, setOffset] = useState(0);
+  const [category, setCategory] = useViewState(
+    memoryKey + ":category",
+    initialCategory || "duplicates",
+  );
+  const [offset, setOffset] = useViewState(
+    "transient:" + memoryKey + ":offset",
+    0,
+  );
   const pageSize = 150;
-  const [chosen, setChosen] = useState<Set<string>>(new Set());
+  const [chosenPaths, setChosenPaths] = useViewState<string[]>(
+    "transient:" + memoryKey + ":chosen",
+    [],
+    (v): v is string[] =>
+      Array.isArray(v) && v.every((p) => typeof p === "string"),
+  );
+  const chosen = new Set(chosenPaths);
+  const setChosen = (value: Set<string> | ((v: Set<string>) => Set<string>)) =>
+    setChosenPaths((current) => [
+      ...(typeof value === "function" ? value(new Set(current)) : value),
+    ]);
   const [error, setError] = useState("");
   const sys = useAsync(
     () => request<any>("system_info", { hide_names: true }),
@@ -75,28 +98,47 @@ export function Clean({
   );
   useEffect(() => {
     if (!job) return;
-    const localValue = setInterval(
-      () =>
-        void request<Job[]>("jobs", { result_id: job }).then((v) => {
-          const current = v.find((j) => j.id === job);
-          if (!current) return;
-          setProgress(current);
-          if (current.status === "done") {
-            if (current.result_expired)
-              setError(t("扫描结果已释放，请重新扫描"));
-            setResult(current.result);
-            setChosen(new Set());
-            setOffset(0);
-            setJob(null);
-          } else if (["failed", "cancelled"].includes(current.status)) {
-            setError(current.error || t("扫描已取消"));
-            setJob(null);
+    let alive = true;
+    let timer: ReturnType<typeof setTimeout>;
+    const poll = async () => {
+      try {
+        const v = await request<Job[]>("jobs", { result_id: job });
+        if (!alive) return;
+        const current = v.find((j) => j.id === job);
+        if (!current) {
+          setError(t("扫描结果已释放，请重新扫描"));
+          setScanId(null);
+          setJob(null);
+          return;
+        }
+        setProgress(current);
+        if (current.status === "done") {
+          if (current.result_expired || !current.result) {
+            setError(t("扫描结果已释放，请重新扫描"));
+            setScanId(null);
           }
-        }),
-      700,
-    );
-    return () => clearInterval(localValue);
-  }, [job]);
+          setResult(current.result);
+          setJob(null);
+        } else if (["failed", "cancelled"].includes(current.status)) {
+          setError(current.error || t("扫描已取消"));
+          setJob(null);
+          setScanId(null);
+        } else {
+          timer = setTimeout(() => void poll(), 700);
+        }
+      } catch (e) {
+        if (alive) {
+          setError(String(e));
+          setJob(null);
+        }
+      }
+    };
+    void poll();
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+    };
+  }, [job, setScanId]);
   const cats: any[] =
     result?.categories ||
     [
@@ -145,13 +187,20 @@ export function Clean({
         op: "clean_scan",
         args: { roots },
       });
+      setResult(null);
+      setProgress(null);
+      setChosen(new Set());
+      setOffset(0);
+      setScanId(result.id);
       setJob(result.id);
     } catch (e) {
       setError(String(e));
     }
   };
+  const initialScan = useRef(false);
   useEffect(() => {
-    if (scope) void scan();
+    if (!initialScan.current && scope && !scanId) void scan();
+    initialScan.current = true;
   }, [scope]);
   return (
     <div className="feature-page">
@@ -424,13 +473,16 @@ export function Clean({
 export function Packages() {
   const app = useApp();
   const load = useAsync(() => request<any>("packages"), [app.refresh]);
-  const [query, setQuery] = useState("");
-  const [manager, setManager] = useState("all");
-  const [reason, setReason] = useState("all");
-  const [sort, setSort] = useState("name");
-  const [selected, setSelected] = useState<any>(null);
-  const [page, setPage] = useState(0);
-  const [tab, setTab] = useState("installed");
+  const [query, setQuery] = useViewState("packages:query", "");
+  const [manager, setManager] = useViewState("packages:manager", "all");
+  const [reason, setReason] = useViewState("packages:reason", "all");
+  const [sort, setSort] = useViewState("packages:sort", "name");
+  const [selectedId, setSelectedId] = useViewState("packages:selected", "");
+  const selected =
+    load.data?.items.find((p: any) => p.id === selectedId) || null;
+  const setSelected = (p: any) => setSelectedId(p?.id || "");
+  const [page, setPage] = useViewState("packages:page", 0);
+  const [tab, setTab] = useViewState("packages:tab", "installed");
   const items = useMemo(
     () =>
       (load.data?.items || [])
@@ -449,7 +501,20 @@ export function Packages() {
         ),
     [load.data, query, manager, reason, sort],
   );
-  useEffect(() => setPage(0), [query, manager, reason, sort]);
+  const filters = JSON.stringify([query, manager, reason, sort]);
+  const previousFilters = useRef(filters);
+  useEffect(() => {
+    if (previousFilters.current !== filters) {
+      previousFilters.current = filters;
+      setPage(0);
+      return;
+    }
+    if (load.data) {
+      const last = Math.max(0, Math.ceil(items.length / 100) - 1);
+      if (page < 0 || page > last || !Number.isInteger(page))
+        setPage(Math.min(last, Math.max(0, Math.floor(page) || 0)));
+    }
+  }, [filters, load.data, items.length, page, setPage]);
   const reasons: Record<string, string> = {
     manual: t("手动安装"),
     dependency: t("依赖"),
@@ -742,7 +807,7 @@ export function Packages() {
 }
 export function SystemPage() {
   const app = useApp();
-  const [hide, setHide] = useState(true);
+  const [hide, setHide] = useViewState("system:hide", true);
   const data = useAsync(
     () => request<any>("system_info", { hide_names: hide }),
     [hide, app.refresh],

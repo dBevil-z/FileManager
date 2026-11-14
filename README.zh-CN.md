@@ -9,7 +9,7 @@
 <p align="center">
   <a href="https://github.com/dBevil-z/FileManager/actions/workflows/linux.yml"><img src="https://github.com/dBevil-z/FileManager/actions/workflows/linux.yml/badge.svg" alt="Linux 检查" /></a>
   <img src="https://img.shields.io/badge/platform-Linux-8b73ef" alt="平台：Linux" />
-  <img src="https://img.shields.io/badge/version-0.2.2_preview-6b8fcc" alt="版本：0.2.2 预览版" />
+  <a href="https://github.com/dBevil-z/FileManager/releases/latest"><img src="https://img.shields.io/github/v/release/dBevil-z/FileManager?color=6b8fcc" alt="最新发行版" /></a>
 </p>
 
 浏览文件、收集项目资料、预览文档，再用插件处理日常小任务。FileManager 将多标签、双栏、工作空间、书签和可定制外观放进同一个 Linux 桌面应用。
@@ -37,6 +37,12 @@
 
 具体实现、验证证据与平台差异见[功能对照](docs/features.zh-CN.md)。
 
+### 继续上次浏览
+
+切换菜单后恢复上次的目录或详情页，以及筛选、视图、选择和滚动位置。远程存储还会记住连接、Bucket、目录和页码。位置可在重启后继续恢复；清理扫描结果只在本次运行内、后端仍保留结果时恢复。
+
+在 **设置 → 浏览与恢复** 中可关闭记忆或重置各菜单位置。离开页面仍释放预览；持久化状态最多 256 KiB / 256 项，远程列表元数据最多缓存四分钟、四个位置和 2 MiB。凭据与服务端游标不会写入界面状态快照。
+
 ### 选择你的外观
 
 六套协调的皮肤：**鸢尾紫、石墨、深海蓝、林间、暖砂、暮樱**。每套均支持明暗主题，并可调整强调色与文件夹样式。
@@ -61,6 +67,16 @@
 ## 开始使用
 
 **当前验证环境：** Linux x86_64、Ubuntu 24.04、KDE/X11。其他发行版、Wayland、ARM64 和较旧系统库基线正在规划验证。Windows、macOS 不属于当前实现范围。
+
+### 下载发行版
+
+[**下载 Linux 版 FileManager**](https://github.com/dBevil-z/FileManager/releases/latest) · [版本说明](https://github.com/dBevil-z/FileManager/releases) · [更新指南](docs/releases.zh-CN.md)
+
+- **Ubuntu/Debian：** 下载 `.deb`，执行 `sudo apt install ./FileManager_0.2.4_amd64.deb`。
+- **AppImage：** 下载后赋予执行权限并运行。无需 FUSE 的启动方式：`./FileManager_0.2.4_amd64.AppImage --appimage-extract-and-run`。
+- 在 **设置 / 关于 → 软件更新** 中检查稳定版本，验证签名后由你选择安装、重启。0.2.4 以前的版本需要先手动升级一次。
+
+安装包在 Ubuntu 24.04 构建；AppImage 仍依赖宿主 glibc 基线，不代表已兼容所有 Linux 发行版。每个 Release 包含 `SHA256SUMS` 和绑定版本号的更新签名。
 
 ### 从源码运行
 
@@ -88,14 +104,14 @@ pnpm tauri build
 ./scripts/install-user.sh
 
 # 也可安装生成的 Debian 软件包：
-sudo apt install ./target/release/bundle/deb/FileManager_0.2.2_amd64.deb
+sudo apt install ./target/release/bundle/deb/FileManager_0.2.4_amd64.deb
 
 # 或运行生成的 AppImage：
-chmod +x target/release/bundle/appimage/FileManager_0.2.2_amd64.AppImage
-./target/release/bundle/appimage/FileManager_0.2.2_amd64.AppImage
+chmod +x target/release/bundle/appimage/FileManager_0.2.4_amd64.AppImage
+./target/release/bundle/appimage/FileManager_0.2.4_amd64.AppImage
 ```
 
-选择一种安装方式，避免重复菜单入口。安装后在应用菜单搜索 **FileManager**。仓库 Actions 支持手动或版本标签触发打包并下载 CI 产物；推送源码本身不会创建 GitHub Release。
+选择一种安装方式，避免重复菜单入口。安装后在应用菜单搜索 **FileManager**。稳定版本标签会在检查通过后触发签名 Release 发布，普通源码推送只运行检查。见[维护者指南](docs/releases.zh-CN.md)。
 
 ### 常用快捷键
 
@@ -162,7 +178,7 @@ scripts/                   用户安装与插件打包
 
 ## 项目状态与参与开发
 
-当前为 **早期预览版**。媒体格式和桌面集成依赖系统能力；部分新增界面与插件元数据目前以中文为主。更广的 Linux 覆盖、跨应用拖放完整验证、签名联网市场和远程自动更新仍在[路线图](ROADMAP.zh-CN.md)中。
+当前为 **早期预览版**。媒体格式和桌面集成依赖系统能力；部分新增界面与插件元数据目前以中文为主。更广的 Linux 覆盖、跨应用拖放完整验证、签名联网市场仍在[路线图](ROADMAP.zh-CN.md)中；0.2.4 已提供应用签名更新。
 
 欢迎阅读[贡献指南](CONTRIBUTING.zh-CN.md)、提交 [Issue](https://github.com/dBevil-z/FileManager/issues) 或开发插件。视觉参考来自 [FileOS for Mac](https://fileosmac.com/)，Linux 实现与扩展架构保存在本仓库。
 

@@ -1,3 +1,4 @@
+import { useViewState } from "../hooks/useViewState";
 import { useEffect, useRef, useState } from "react";
 import {
   Puzzle,
@@ -106,8 +107,11 @@ export function PluginsPage() {
     () => request<PluginCatalog>("plugins_list"),
     [app.refresh],
   );
-  const [query, setQuery] = useState("");
-  const [tab, setTab] = useState<"discover" | "installed">("discover");
+  const [query, setQuery] = useViewState("plugins:query", "");
+  const [tab, setTab] = useViewState<"discover" | "installed">(
+    "plugins:tab",
+    "discover",
+  );
   const [busy, setBusy] = useState(false);
   async function review(source: Record<string, string>) {
     setBusy(true);

@@ -1,3 +1,4 @@
+import { project } from "./lib/project";
 export type Entry = {
   path: string;
   name: string;
@@ -72,6 +73,7 @@ export type Settings = {
   theme: "system" | "light" | "dark";
   skin: string;
   reduceMotion: boolean;
+  rememberNavigation: boolean;
   repositoryUrl: string;
   accent: string;
   folderStyle: "glass" | "plain" | "flat" | "system";
@@ -160,7 +162,8 @@ export const defaultSettings: Settings = {
   theme: "system",
   skin: "graphite",
   reduceMotion: false,
-  repositoryUrl: "https://github.com/dBevil-z/FileManager",
+  rememberNavigation: true,
+  repositoryUrl: project.repository,
   accent: "#8b73ef",
   folderStyle: "glass",
   folderColor: "#8870ed",

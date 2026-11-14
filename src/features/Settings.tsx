@@ -11,7 +11,6 @@ import {
   Monitor,
   Moon,
   Palette,
-  RefreshCw,
   Settings2,
   ShieldCheck,
   Sun,
@@ -33,7 +32,8 @@ import {
   Toggle,
 } from "../components/ui";
 import { skins } from "../lib/themes";
-import { repository } from "./About";
+import { project, repository } from "../lib/project";
+import { UpdatePanel } from "./Updates";
 import { ResourcePanel } from "./Resources";
 import { shortcutDefaults, shortcutLabels, keyString } from "../lib/shortcuts";
 export function SettingsPage() {
@@ -250,6 +250,28 @@ export function SettingsPage() {
           <kbd>Ctrl L</kbd>
         </Row>
       </Section>
+      <Section title={t("浏览与恢复")}>
+        <Row
+          title={t("记住浏览位置")}
+          description={t(
+            "切换菜单后继续上次的目录、筛选和滚动位置，重启后也可恢复。",
+          )}
+        >
+          <Toggle
+            label={t("记住浏览位置")}
+            checked={s.rememberNavigation}
+            onChange={(v) => update({ rememberNavigation: v })}
+          />
+        </Row>
+        <Row
+          title={t("重置各菜单位置")}
+          description={t(
+            "下次进入菜单时从起点开始，不影响文件和已保存的连接。",
+          )}
+        >
+          <Button onClick={app.resetViewMemory}>{t("重置位置")}</Button>
+        </Row>
+      </Section>
       <Section title={t("桌面与 Drop Shelf")}>
         <Row
           title={t("显示系统托盘")}
@@ -438,7 +460,9 @@ export function SettingsPage() {
               const value = await app.prompt(
                 t("GitHub 地址"),
                 s.repositoryUrl,
-                t("先使用作者主页；创建仓库后可替换为仓库地址。"),
+                t(
+                  "官方项目仓库已配置。此地址仅影响展示链接，不改变签名更新来源。",
+                ),
               );
               if (value === null) return;
               const valid = repository(value);
@@ -460,39 +484,34 @@ export function SettingsPage() {
             {t("关于 FileManager")}
           </Button>
         </Row>
-        <Row
-          title={t("检查更新")}
-          description={t("当前为本地构建版，更新通过本项目重新构建安装。")}
-        >
-          <Button
-            onClick={() => {
-              const repo = repository(s.repositoryUrl);
-              if (repo?.isRepo)
-                void desktop("open_url", { url: repo.url + "/releases" }).catch(
-                  (e) => app.notify(String(e), true),
-                );
-              else
-                app.notify(
-                  t(
-                    "当前版本 {0}。创建仓库后可连接 GitHub Releases。",
-                    app.boot.version,
-                  ),
-                );
-            }}
-          >
-            <RefreshCw size={12} />
-            {t("检查版本")}
-          </Button>
-        </Row>
-        <Row title={t("参考产品与使用指南")}>
+        <UpdatePanel />
+        <Row title={t("项目文档与反馈")}>
           <Button
             onClick={() =>
-              void desktop("open_url", {
-                url: "https://fileosmac.com/docs/",
-              })
+              void desktop("open_url", { url: project.guide }).catch((e) =>
+                app.notify(String(e), true),
+              )
             }
           >
-            {t("FileOS 参考指南")}
+            {t("项目使用指南")}
+          </Button>
+          <Button
+            onClick={() =>
+              void desktop("open_url", { url: project.issues }).catch((e) =>
+                app.notify(String(e), true),
+              )
+            }
+          >
+            {t("问题反馈")}
+          </Button>
+          <Button
+            onClick={() =>
+              void desktop("open_url", { url: project.roadmap }).catch((e) =>
+                app.notify(String(e), true),
+              )
+            }
+          >
+            {t("项目路线图")}
           </Button>
         </Row>
       </Section>

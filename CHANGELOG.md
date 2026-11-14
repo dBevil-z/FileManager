@@ -2,6 +2,22 @@
 
 [English](CHANGELOG.md) · [简体中文](CHANGELOG.zh-CN.md)
 
+## 0.2.4 — Signed releases and updates · 2026-11-14
+
+- Publish Linux deb, AppImage and user-install artifacts with SHA-256 checksums, a GitHub update feed and signatures bound to the release version.
+- Add on-demand version checks, release notes, download progress, signature verification, explicit installation/restart and atomic user-install rollback copies.
+- Guard updates against active background jobs; await browsing-session persistence before restarting.
+- Consolidate official repository, guide, roadmap, issue, author and Release links; migrate the legacy default profile URL.
+- Add tagged Release automation, public signing-key configuration and bilingual publishing/recovery instructions. Private signing material stays outside Git.
+- Includes the 0.2.3 navigation-restoration changes below in the first packaged public release.
+
+## 0.2.3 — Resume browsing · 2026-11-14
+
+- Remember each menu’s directory/detail page, filters, view controls, selection, and scroll position across menu switches and restarts.
+- Restore remote connections, Buckets, directories, and pages with fresh cursors after restart.
+- Reattach to retained cleanup scan results during the current run without starting a new scan on each visit.
+- Add controls to disable navigation memory and reset saved positions. Keep UI snapshots bounded; release inactive previews and expire remote metadata caches.
+
 ## 0.2.2 — MinIO accounts and bucket browsing · 2026-11-14
 
 - Dedicated MinIO username/password sign-in, verified before saving.

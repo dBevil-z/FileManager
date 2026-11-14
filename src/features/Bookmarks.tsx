@@ -1,3 +1,5 @@
+import { useViewState } from "../hooks/useViewState";
+import { viewKey } from "../lib/view-memory";
 import { t } from "../i18n";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -36,19 +38,25 @@ export function Bookmarks({
   page: Extract<Page, { type: "bookmarks" }>;
 }) {
   const app = useApp();
-  const [query, setQuery] = useState("");
-  const [view, setView] = useState(
+  const scope = viewKey(
+    "bookmarks",
+    page.id || "",
+    page.favourites ? "star" : "",
+    page.tag || "",
+  );
+  const [query, setQuery] = useViewState(scope + ":query", "");
+  const [view, setView] = useViewState(
+    scope + ":view",
     localStorage.getItem("filemanager-bookmark-view") || "grid",
   );
-  const [sort, setSort] = useState("newest");
+  const [sort, setSort] = useViewState(scope + ":sort", "newest");
   const [menu, setMenu] = useState<{
     x: number;
     y: number;
     bookmark: Bookmark;
   } | null>(null);
   const collection = app.catalog.collections.find((c) => c.id === page.id);
-  const [tag, setTag] = useState(page.tag || "");
-  useEffect(() => setTag(page.tag || ""), [page.tag]);
+  const [tag, setTag] = useViewState(scope + ":tag", page.tag || "");
   const q = query.toLowerCase();
   const list = app.catalog.bookmarks
     .filter(

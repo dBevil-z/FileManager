@@ -1,3 +1,4 @@
+import { useViewState } from "../hooks/useViewState";
 import { t } from "../i18n";
 import { useEffect, useState } from "react";
 import {
@@ -83,10 +84,12 @@ const tools: Record<string, { id: string; color: string; url: string }> = {
 };
 export function Agents() {
   const app = useApp();
-  const [tab, setTab] = useState("projects");
-  const [query, setQuery] = useState("");
-  const [tool, setTool] = useState("all");
-  const [project, setProject] = useState<Project | null>(null);
+  const [tab, setTab] = useViewState("agents:tab", "projects");
+  const [query, setQuery] = useViewState("agents:query", "");
+  const [tool, setTool] = useViewState("agents:tool", "all");
+  const [projectPath, setProjectPath] = useViewState("agents:project", "");
+  const setProject = (project: Project | null) =>
+    setProjectPath(project?.path || "");
   const load = useAsync(
     () =>
       request<{
@@ -96,6 +99,8 @@ export function Agents() {
       }>("agent_projects"),
     [app.catalog.agentRoots.join("\0"), app.refresh],
   );
+  const project =
+    load.data?.projects.find((p) => p.path === projectPath) || null;
   const projects =
     load.data?.projects.filter(
       (p) =>
@@ -455,10 +460,13 @@ function ConfigEditor({
 }
 function Usage() {
   const app = useApp();
-  const [period, setPeriod] = useState(30);
-  const [provider, setProvider] = useState("all");
-  const [project, setProject] = useState("");
-  const [breakdown, setBreakdown] = useState("models");
+  const [period, setPeriod] = useViewState("agents:usage:period", 30);
+  const [provider, setProvider] = useViewState("agents:usage:provider", "all");
+  const [project, setProject] = useViewState("agents:usage:project", "");
+  const [breakdown, setBreakdown] = useViewState(
+    "agents:usage:breakdown",
+    "models",
+  );
   const from = new Date(Date.now() - (period - 1) * 86400000)
     .toISOString()
     .slice(0, 10);

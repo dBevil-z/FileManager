@@ -1,8 +1,14 @@
-# Validation record — 0.2.2
+# Validation record — 0.2.3
 
 [English](verification.md) · [简体中文](verification.zh-CN.md)
 
 Local validation date: **2026-11-14**. The tested environment is Linux x86_64, Ubuntu 24.04, KDE/X11. Ubuntu 26.04 Wayland/KVM and other distributions are planned validation targets, not current certifications. Repository CI status is available in [Actions](https://github.com/dBevil-z/FileManager/actions/workflows/linux.yml).
+
+## 0.2.4 signed-update validation
+
+The offline suite contains **46 frontend + 78 Rust/native + 6 release-script tests**. Updater coverage includes an actual local HTTP download with a version-bound signature, altered payload rejection, signed-version mismatch rejection, atomic replacement with a previous-binary backup, symlink rejection, concurrent-operation gating, UI check/progress/error/retry flows, and session persistence/job guards before restart. Two additional tests require release assets: cryptographic verification of all staged packages runs before publication, and a real-feed isolated upgrade runs after publication. Both are ignored by the offline suite.
+
+Release packaging and post-publication download evidence are recorded in the tagged Release and Actions run. The updater only connects after an explicit check. System package authorization is delegated to pkexec; no password is collected by FileManager.
 
 ## Automated checks
 
@@ -10,12 +16,22 @@ Local validation date: **2026-11-14**. The tested environment is Linux x86_64, U
 | ------------ | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Rust core    | 66 passing   | File conflicts, cross-volume work/undo, legacy databases, cleanup, AI/MCP, preview budgets, plugin boundaries, remote pagination, batch transfers, and sync previews. |
 | Tauri/GTK    | 4 passing    | Argument normalization, file URIs, non-UTF-8 paths, deep-link routing, and a separate clipboard test selection.                                                       |
-| Frontend     | 11 passing   | Localization, tab restoration/navigation/closing, weighted caches, queued preview cancellation, theme contrast, and GitHub URLs.                                      |
+| Frontend     | 46 passing   | Localization, tab restoration/navigation/closing, weighted caches, queued preview cancellation, theme contrast, and GitHub URLs.                                      |
 | Static/build | Passing      | TypeScript, Rustfmt, Prettier, whitespace checks, production frontend/native builds, and deb/AppImage packaging.                                                      |
 
-Total: **81 local automated tests** (70 Rust and 11 frontend). The core includes 13 remote-storage tests; the remaining 53 cover jobs, agents, catalogs, files, plugins, previews, processes, and tools. GTK tests use isolated Xvfb, D-Bus, and clipboard selections. Upstream Markdown packages emit harmless empty-directive build warnings.
+Total: **106 local automated tests** (70 Rust and 36 frontend). The core includes 13 remote-storage tests; the remaining 53 cover jobs, agents, catalogs, files, plugins, previews, processes, and tools. GTK tests use isolated Xvfb, D-Bus, and clipboard selections. Upstream Markdown packages emit harmless empty-directive build warnings.
 
 Plugin tests include traversal, unknown grants, changed installed content, out-of-scope reads, descendant symlink escapes, loop cancellation, JS heap exhaustion, missing host capabilities, and spreadsheet-formula escaping. Atomics/shared buffers/promises are not exposed in the runtime.
+
+## 0.2.3 browsing-state acceptance
+
+Twenty-five added frontend tests exercise real React component unmount/remount, local and remote directory navigation, workspace details, back/forward menu provenance, visible filters, selection, package pagination, cleanup result reattachment/expiry, disabled/reset memory, and Markdown unsaved-change protection. They also cover fresh cursor replay after restart, late cursor cleanup, revision/credential isolation, non-UTF-8 path tokens, deferred scroll restoration, manual-scroll precedence, recent-history pruning, and byte/entry/cache limits.
+
+A browser connected to the real Rust development backend used isolated Home/application state and 80 demonstration files. Switching from `Downloads/Projects/Assets` to Documents and back preserved list view, the `Note-0` filter, and a 2100.8-pixel scroll offset. An immediate reload restored the same path, filter, and offset. Route changes save immediately; frequent control/scroll changes are debounced by 700 ms. This is browser evidence; it does not extend Wayland or distribution certification.
+
+Final 0.2.3 deb and AppImage packages also started in separate Xvfb/D-Bus sessions with copies of the demonstration state. Native D-Bus reported 0.2.3 for both, and each retained the nested Assets directory and filter in its session. A real GTK/WebKit development capture verified the restored scroll position and sidebar highlight.
+
+UI snapshots are capped at 256 KiB / 256 entries, 32 KiB per value, and 1000 array items. Inactive remote metadata is bounded by four locations, 2 MiB serialized weight, and four minutes since its last request; cursor handles close on expiry, eviction, or disposal. Restart uses numeric pages with fresh server cursors. Clean results are re-read from existing backend jobs during the same run; released results require a new scan. No file contents, credential forms, server cursors, or full scan results enter durable view state.
 
 ## 0.2.2 MinIO accounts and bucket acceptance
 
@@ -106,4 +122,4 @@ Local generated package hashes are written to `target/release/bundle/SHA256SUMS`
 
 ## Remaining acceptance work
 
-Native Wayland drag/drop, shortcuts, edge detection, portals, scaling/multiple monitors, login/reboot, and broader distribution installation follow the [roadmap](../ROADMAP.md). Signed online plugin distribution and updater mechanisms are not implemented. Short regression tests do not prove days of stable resource use.
+Native Wayland drag/drop, shortcuts, edge detection, portals, scaling/multiple monitors, login/reboot, and broader distribution installation follow the [roadmap](../ROADMAP.md). Signed online plugin distribution remains planned. Application updates are implemented from 0.2.4; see the [update guide](releases.md). Short regression tests do not prove days of stable resource use.

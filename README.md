@@ -9,7 +9,7 @@
 <p align="center">
   <a href="https://github.com/dBevil-z/FileManager/actions/workflows/linux.yml"><img src="https://github.com/dBevil-z/FileManager/actions/workflows/linux.yml/badge.svg" alt="Linux checks" /></a>
   <img src="https://img.shields.io/badge/platform-Linux-8b73ef" alt="Platform: Linux" />
-  <img src="https://img.shields.io/badge/version-0.2.2_preview-6b8fcc" alt="Version: 0.2.2 preview" />
+  <a href="https://github.com/dBevil-z/FileManager/releases/latest"><img src="https://img.shields.io/github/v/release/dBevil-z/FileManager?color=6b8fcc" alt="Latest release" /></a>
 </p>
 
 Browse files, collect project references, preview documents, and add focused tools through plugins. FileManager brings tabs, dual panes, workspaces, bookmarks, and a personal visual style into one Linux application.
@@ -37,6 +37,12 @@ Browse files, collect project references, preview documents, and add focused too
 
 See the [feature matrix](docs/features.md) for implementation evidence and platform limits.
 
+### Continue where you left off
+
+Switching menus restores the last directory or detail page, along with filters, view controls, selection, and scroll position. Remote storage remembers the connection, Bucket, directory, and page. These positions also survive a restart; completed scan results remain available only while the backend retains them during the current run.
+
+Use **Settings → Browsing and restore** to disable this behavior or reset menu positions. Inactive pages release their previews. Durable UI snapshots are limited to 256 KiB / 256 entries; remote list metadata is cached for at most four minutes, four locations, and 2 MiB. Credentials and server cursors are never written into UI snapshots.
+
 ### Make it yours
 
 Six coordinated skins: **Iris, Graphite, Ocean, Forest, Sand, and Rose**. Each supports light and dark mode, with custom accents and folder styles.
@@ -61,6 +67,16 @@ A signed online marketplace and downloadable theme packs are [planned](ROADMAP.m
 ## Get started
 
 **Current validation:** Linux x86_64 on Ubuntu 24.04 with KDE/X11. Other distributions, Wayland, ARM64, and older system-library baselines are being evaluated. Windows and macOS are outside the current implementation scope.
+
+### Download a release
+
+[**Download FileManager for Linux**](https://github.com/dBevil-z/FileManager/releases/latest) · [Release notes](https://github.com/dBevil-z/FileManager/releases) · [Update guide](docs/releases.md)
+
+- **Ubuntu/Debian:** download the `.deb` and install it with `sudo apt install ./FileManager_0.2.4_amd64.deb`.
+- **AppImage:** download, mark executable and run. FUSE-free launch: `./FileManager_0.2.4_amd64.AppImage --appimage-extract-and-run`.
+- Check **Settings / About → Software updates** for newer stable releases. Downloads are signed; installation and restart remain explicit. Versions before 0.2.4 need a one-time manual upgrade.
+
+Packages are built on Ubuntu 24.04. AppImage does not remove the host glibc baseline or guarantee every Linux distribution. `SHA256SUMS` and version-bound updater signatures accompany each release.
 
 ### Build from source
 
@@ -88,14 +104,14 @@ pnpm tauri build
 ./scripts/install-user.sh
 
 # Alternatively, install the Debian package:
-sudo apt install ./target/release/bundle/deb/FileManager_0.2.2_amd64.deb
+sudo apt install ./target/release/bundle/deb/FileManager_0.2.4_amd64.deb
 
 # Or run the generated AppImage:
-chmod +x target/release/bundle/appimage/FileManager_0.2.2_amd64.AppImage
-./target/release/bundle/appimage/FileManager_0.2.2_amd64.AppImage
+chmod +x target/release/bundle/appimage/FileManager_0.2.4_amd64.AppImage
+./target/release/bundle/appimage/FileManager_0.2.4_amd64.AppImage
 ```
 
-Choose one installation method to avoid duplicate launchers. Search for **FileManager** in your application menu after installing. The repository's Actions workflow can build downloadable CI artifacts when run manually or for a version tag; a source push does not create a GitHub Release.
+Choose one installation method to avoid duplicate launchers. Search for **FileManager** in your application menu after installing. Stable version tags trigger the signed Release workflow after checks pass. Ordinary source pushes run checks without publishing. See the [maintainer guide](docs/releases.md).
 
 ### Everyday shortcuts
 
@@ -162,7 +178,7 @@ FileManager has no account system or telemetry. Bookmark metadata, remote images
 
 ## Project status and contributing
 
-This is an **early preview**. Media codecs and desktop integrations depend on system tools; some new interface strings and plugin metadata are currently Chinese. Broad Linux compatibility, complete cross-application drag-and-drop testing, a signed online marketplace, and remote automatic updates remain on the [roadmap](ROADMAP.md).
+This is an **early preview**. Media codecs and desktop integrations depend on system tools; some new interface strings and plugin metadata are currently Chinese. Broad Linux compatibility, complete cross-application drag-and-drop testing, and a signed online marketplace remain on the [roadmap](ROADMAP.md). Signed application updates are available from 0.2.4.
 
 Read [CONTRIBUTING](CONTRIBUTING.md), browse [Issues](https://github.com/dBevil-z/FileManager/issues), or propose a plugin. Visual inspiration comes from [FileOS for Mac](https://fileosmac.com/); Linux implementation and the extension architecture live in this repository.
 

@@ -1,5 +1,8 @@
 import { t } from "../i18n";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { useViewState } from "../hooks/useViewState";
+import { useViewScroll } from "../hooks/useViewScroll";
+import { pageKey } from "../lib/view-memory";
 import {
   Bookmark,
   BriefcaseBusiness,
@@ -54,19 +57,23 @@ export function Sidebar({
   createWorkspace: () => void;
 }) {
   const app = useApp();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useViewScroll(scrollRef, "sidebar");
   const [menu, setMenu] = useState<{
     x: number;
     y: number;
     index: number;
   } | null>(null);
   const [dragged, setDragged] = useState(-1);
-  const [groups, setGroups] = useState<Record<string, boolean>>({});
+  const [groups, setGroups] = useViewState<Record<string, boolean>>(
+    "sidebar:groups",
+    {},
+  );
   const mounts = useAsync(
     () => request<{ path: string; name: string }[]>("mounts"),
     [app.refresh],
   );
-  const active = (page: Page) =>
-    JSON.stringify(app.page) === JSON.stringify(page);
+  const active = (page: Page) => pageKey(app.activeMenu) === pageKey(page);
   function item(
     page: Page,
     name: string,
@@ -77,7 +84,7 @@ export function Sidebar({
       <button
         key={name}
         className={`sidebar-item ${active(page) ? "selected" : ""}`}
-        onClick={() => app.navigate(page)}
+        onClick={() => app.switchMenu(page)}
       >
         <Icon size={16} strokeWidth={1.65} />
         <span>{name}</span>
@@ -114,7 +121,7 @@ export function Sidebar({
         <span>{t("快速切换")}</span>
         <kbd>Ctrl K</kbd>
       </button>
-      <div className="sidebar-scroll">
+      <div className="sidebar-scroll" ref={scrollRef}>
         {heading(t("位置"), "places")}
         {!groups.places &&
           app.boot.places
@@ -214,9 +221,11 @@ export function Sidebar({
               .filter((w) => !w.archived)
               .map((w) => (
                 <button
-                  className={`sidebar-item workspace-link ${app.page.type === "workspace" && app.page.id === w.id ? "selected" : ""}`}
+                  className={`sidebar-item workspace-link ${app.activeMenu.type === "workspace" && app.activeMenu.id === w.id ? "selected" : ""}`}
                   key={w.id}
-                  onClick={() => app.navigate({ type: "workspace", id: w.id })}
+                  onClick={() =>
+                    app.switchMenu({ type: "workspace", id: w.id })
+                  }
                 >
                   <span
                     className="workspace-dot"
@@ -231,7 +240,7 @@ export function Sidebar({
           </>
         )}
         {heading(t("书签"), "bookmarks", () =>
-          app.navigate({ type: "bookmarks" }),
+          app.switchMenu({ type: "bookmarks" }),
         )}
         {!groups.bookmarks && (
           <>
@@ -247,8 +256,8 @@ export function Sidebar({
             {app.catalog.collections.map((c) => (
               <button
                 key={c.id}
-                className={`sidebar-item ${app.page.type === "bookmarks" && app.page.id === c.id ? "selected" : ""}`}
-                onClick={() => app.navigate({ type: "bookmarks", id: c.id })}
+                className={`sidebar-item ${app.activeMenu.type === "bookmarks" && app.activeMenu.id === c.id ? "selected" : ""}`}
+                onClick={() => app.switchMenu({ type: "bookmarks", id: c.id })}
               >
                 <span className="collection-dot" style={{ color: c.color }}>
                   <Layers size={15} />
@@ -285,7 +294,7 @@ export function Sidebar({
       <div className="sidebar-footer">
         <button
           className={app.page.type === "settings" ? "selected" : ""}
-          onClick={() => app.navigate({ type: "settings" })}
+          onClick={() => app.switchMenu({ type: "settings" })}
         >
           <Settings2 size={16} />
           <span>{t("设置")}</span>

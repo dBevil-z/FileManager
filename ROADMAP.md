@@ -6,6 +6,8 @@ FileManager focuses on Linux desktop workflows. Items below distinguish implemen
 
 ## 0.2 — Foundations available now
 
+- [x] Signed stable Release feed, AppImage/deb/user-install updates, version-bound signatures, explicit restart, checksums and bilingual release notes (0.2.4).
+- [x] Per-menu browsing positions, directory/view controls, bounded scroll/session restoration, and remote Bucket/page resume (0.2.3).
 - [x] Tauri/Rust desktop application with persistent file operations and recovery.
 - [x] Icons, list, columns, dual panes, and restored folder tabs.
 - [x] Bounded thumbnail/detail caches, image concurrency, task results, and idle resource lifetimes.
@@ -28,7 +30,7 @@ FileManager focuses on Linux desktop workflows. Items below distinguish implemen
 - [x] Prepare GitHub CI, issue templates, and pull-request guidance.
 - [ ] Expand CI into installation/desktop/resource regressions across distributions.
 - [ ] Select the project license and complete third-party distribution notices.
-- [ ] Publish versioned release notes, checksums, installation instructions, and recoverable updates.
+- [x] Publish versioned release notes, checksums, installation instructions, and recoverable updates (0.2.4).
 - [ ] Evaluate ARM64 and Flatpak after the x86_64/glibc baseline is stable.
 
 ## 0.4 — Plugin and theme ecosystem

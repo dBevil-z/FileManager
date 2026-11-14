@@ -2,6 +2,7 @@ import { t, setLanguage, useLanguage } from "./i18n";
 import {
   useCallback,
   useReducer,
+  useLayoutEffect,
   useEffect,
   useRef,
   useState,
@@ -83,6 +84,17 @@ import { tabsReducer, restoreTabs } from "./lib/tabs";
 import { clearPreviewCache } from "./lib/previews";
 import { applySkin } from "./lib/themes";
 import { dragState } from "./lib/drag";
+import {
+  ViewMemory,
+  isPage,
+  menuForPage,
+  pageKey,
+  rememberMenu,
+  resumeMenu,
+} from "./lib/view-memory";
+import { ViewMemoryContext, useViewMemory } from "./hooks/useViewState";
+import { useViewScroll } from "./hooks/useViewScroll";
+import { migrateRepositoryUrl } from "./lib/project";
 
 export default function App() {
   useLanguage();
@@ -102,16 +114,59 @@ export default function App() {
         <Loading label={t("打开 FileManager…")} />
       </div>
     );
-  return <Desktop boot={boot.data} />;
+  return <DesktopSession boot={boot.data} />;
 }
+function DesktopSession({ boot }: { boot: Bootstrap }) {
+  const [memory] = useState(
+    () =>
+      new ViewMemory(
+        boot.session.data?.viewState,
+        boot.settings.data?.rememberNavigation !== false,
+      ),
+  );
+  useEffect(() => () => memory.dispose(), [memory]);
+  return (
+    <ViewMemoryContext.Provider value={memory}>
+      <Desktop boot={boot} />
+    </ViewMemoryContext.Provider>
+  );
+}
+type HistoryLocation = { page: Page; menu: Page };
 function Desktop({ boot }: { boot: Bootstrap }) {
+  const memory = useViewMemory();
   const standalone =
     new URLSearchParams(location.search).get("window") === "shelf";
-  const initialPage = (boot.session.data?.page as Page) || {
-    type: "folder",
-    path: boot.places.find((p) => p.id === "downloads")?.path || boot.home,
-  };
+  const initialPage: Page =
+    boot.settings.data?.rememberNavigation !== false &&
+    isPage(boot.session.data?.page)
+      ? boot.session.data.page
+      : {
+          type: "folder",
+          path:
+            boot.places.find((p) => p.id === "downloads")?.path || boot.home,
+        };
   const [page, setPage] = useState<Page>(initialPage);
+  const [activeMenu, setActiveMenu] = useState<Page>(() => {
+    const saved = memory.get<unknown>("menu:active");
+    return menuForPage(
+      initialPage,
+      boot.places.map((p) => ({ type: "folder", path: p.path })),
+      isPage(saved) ? saved : undefined,
+    );
+  });
+  const pageRef = useRef(page);
+  pageRef.current = page;
+  const menuRef = useRef(activeMenu);
+  menuRef.current = activeMenu;
+  const contentRef = useRef<HTMLDivElement>(null);
+  useViewScroll(
+    contentRef,
+    pageKey(page),
+    page.type !== "folder" && page.type !== "remote",
+  );
+  useLayoutEffect(() => {
+    rememberMenu(memory, activeMenu, page);
+  }, [memory, activeMenu, page]);
   const [folderTabs, tabAction] = useReducer(tabsReducer, undefined, () =>
     restoreTabs(
       boot.session.data?.folderTabs,
@@ -164,8 +219,8 @@ function Desktop({ boot }: { boot: Bootstrap }) {
     [],
   );
 
-  const [past, setPast] = useState<Page[]>([]);
-  const [future, setFuture] = useState<Page[]>([]);
+  const [past, setPast] = useState<HistoryLocation[]>([]);
+  const [future, setFuture] = useState<HistoryLocation[]>([]);
   const [catalog, setCatalog] = useState<Catalog>({
     ...emptyCatalog,
     ...boot.catalog.data,
@@ -176,6 +231,7 @@ function Desktop({ boot }: { boot: Bootstrap }) {
   const [settings, setSettings] = useState<Settings>({
     ...defaultSettings,
     ...boot.settings.data,
+    repositoryUrl: migrateRepositoryUrl(boot.settings.data?.repositoryUrl),
   });
   useEffect(() => setLanguage(settings.language), [settings.language]);
   const settingsRef = useRef(settings);
@@ -232,26 +288,52 @@ function Desktop({ boot }: { boot: Bootstrap }) {
     parent: string;
     at: number;
   } | null>(null);
-  const navigate = useCallback((next: Page, revealPath?: string) => {
-    const proceed = () => {
-      setPage((current) => {
-        setPast((p) => [...p.slice(-39), current]);
-        return next;
+  const navigate = useCallback(
+    (next: Page, revealPath?: string, forcedMenu?: Page) => {
+      const proceed = () => {
+        const current = pageRef.current;
+        const previousMenu = menuRef.current;
+        rememberMenu(memory, previousMenu, current);
+        const menu =
+          forcedMenu ||
+          menuForPage(
+            next,
+            [...boot.places, ...catalogRef.current.favourites].map((p) => ({
+              type: "folder",
+              path: p.path,
+            })),
+            previousMenu,
+          );
+        setPast((p) => [
+          ...p.slice(-39),
+          { page: current, menu: previousMenu },
+        ]);
+        pageRef.current = next;
+        menuRef.current = menu;
+        setActiveMenu(menu);
+        setPage(next);
+        setFuture([]);
+        setSelection([]);
+        setReveal(
+          next.type === "folder" && revealPath
+            ? { path: revealPath, parent: next.path, at: Date.now() }
+            : null,
+        );
+      };
+      const event = new CustomEvent("filemanager-before-navigate", {
+        cancelable: true,
+        detail: { next, proceed },
       });
-      setFuture([]);
-      setSelection([]);
-      setReveal(
-        next.type === "folder" && revealPath
-          ? { path: revealPath, parent: next.path, at: Date.now() }
-          : null,
-      );
-    };
-    const event = new CustomEvent("filemanager-before-navigate", {
-      cancelable: true,
-      detail: { next, proceed },
-    });
-    if (window.dispatchEvent(event)) proceed();
-  }, []);
+      if (window.dispatchEvent(event)) proceed();
+    },
+    [memory, boot],
+  );
+  const switchMenu = useCallback(
+    (menu: Page, reset = false) => {
+      navigate(reset ? menu : resumeMenu(memory, menu), undefined, menu);
+    },
+    [navigate, memory],
+  );
   const updateCatalog = useCallback(
     (change: (value: Catalog) => Catalog): Promise<void> => {
       const task = catalogQueue.current
@@ -482,24 +564,53 @@ function Desktop({ boot }: { boot: Bootstrap }) {
     return () => clearTimeout(localValue);
   }, [toast]);
   useEffect(() => {
+    memory.setEnabled(settings.rememberNavigation);
+  }, [memory, settings.rememberNavigation]);
+  const sessionQueue = useRef(Promise.resolve());
+  const flushSession = useRef<() => Promise<void>>(async () => {});
+  useEffect(() => {
     if (standalone) return;
-    const localValue = setTimeout(
-      () =>
-        void request("catalog_save", {
-          namespace: "session",
-          data: {
-            page,
-            dual,
-            rightPath,
-            split,
-            folderTabs: folderTabs.items,
-            activeTab: folderTabs.active,
-          },
-        }).catch(() => {}),
-      900,
-    );
-    return () => clearTimeout(localValue);
-  }, [page, dual, rightPath, split, standalone, folderTabs]);
+    let timer: ReturnType<typeof setTimeout>;
+    const save = () => {
+      clearTimeout(timer);
+      const data = {
+        page,
+        dual,
+        rightPath,
+        split,
+        folderTabs: folderTabs.items,
+        activeTab: folderTabs.active,
+        viewState: memory.snapshot(),
+      };
+      sessionQueue.current = sessionQueue.current
+        .catch(() => {})
+        .then(() => request("catalog_save", { namespace: "session", data }))
+        .then(() => {});
+      void sessionQueue.current.catch(() => {});
+    };
+    const schedule = () => {
+      clearTimeout(timer);
+      timer = setTimeout(save, 700);
+    };
+    flushSession.current = () => {
+      save();
+      return sessionQueue.current;
+    };
+    const visibility = () => {
+      if (document.hidden) save();
+    };
+    const unsubscribe = memory.subscribe(schedule);
+    // Commit route changes immediately; debounce high-frequency scroll/controls.
+    save();
+    window.addEventListener("pagehide", save);
+    document.addEventListener("visibilitychange", visibility);
+    return () => {
+      clearTimeout(timer);
+      unsubscribe();
+      window.removeEventListener("pagehide", save);
+      document.removeEventListener("visibilitychange", visibility);
+    };
+  }, [page, dual, rightPath, split, standalone, folderTabs, memory]);
   useEffect(() => {
     const poll = async () => {
       if (document.hidden) return;
@@ -661,7 +772,11 @@ function Desktop({ boot }: { boot: Bootstrap }) {
         setCatalog(catalogRef.current);
       }
       if (s.revision > settingsRevision.current) {
-        settingsRef.current = { ...defaultSettings, ...s.data };
+        settingsRef.current = {
+          ...defaultSettings,
+          ...s.data,
+          repositoryUrl: migrateRepositoryUrl(s.data?.repositoryUrl),
+        };
         settingsRevision.current = s.revision;
         setSettings(settingsRef.current);
       }
@@ -782,6 +897,35 @@ function Desktop({ boot }: { boot: Bootstrap }) {
     catalog,
     settings,
     page,
+    activeMenu,
+    switchMenu,
+    resetViewMemory: () => {
+      memory.clear();
+      notify(t("已重置浏览位置，下次进入菜单时生效"));
+    },
+    restartForUpdate: async () => {
+      const latestJobs = await request<Job[]>("jobs");
+      if (
+        latestJobs.some(
+          (job) => job.status === "running" || job.status === "queued",
+        )
+      )
+        throw new Error(t("请先等待后台任务完成，再重启。"));
+      const restart = async () => {
+        await Promise.all([settingsQueue.current, catalogQueue.current]);
+        await flushSession.current();
+        await desktop("update_restart");
+      };
+      const proceed = () =>
+        void restart().catch((e) => notify(errorText(e), true));
+      const event = new CustomEvent("filemanager-before-navigate", {
+        cancelable: true,
+        detail: { next: pageRef.current, proceed },
+      });
+      if (window.dispatchEvent(event)) {
+        await restart();
+      }
+    },
     plugins: pluginCatalog.data?.plugins || [],
     jobs,
     runPlugin: (id, selected, directory) => {
@@ -893,15 +1037,19 @@ function Desktop({ boot }: { boot: Bootstrap }) {
                   const previous = past.at(-1);
                   if (previous) {
                     const proceed = () => {
-                      setFuture((v) => [page, ...v]);
+                      setFuture((v) => [{ page, menu: activeMenu }, ...v]);
                       setPast((v) => v.slice(0, -1));
-                      setPage(previous);
+                      setPage(previous.page);
+                      setActiveMenu(previous.menu);
+                      pageRef.current = previous.page;
+                      menuRef.current = previous.menu;
+                      setSelection([]);
                     };
                     if (
                       window.dispatchEvent(
                         new CustomEvent("filemanager-before-navigate", {
                           cancelable: true,
-                          detail: { next: previous, proceed },
+                          detail: { next: previous.page, proceed },
                         }),
                       )
                     )
@@ -918,15 +1066,19 @@ function Desktop({ boot }: { boot: Bootstrap }) {
                   if (future[0]) {
                     const next = future[0];
                     const proceed = () => {
-                      setPast((v) => [...v, page]);
-                      setPage(next);
+                      setPast((v) => [...v, { page, menu: activeMenu }]);
+                      setPage(next.page);
+                      setActiveMenu(next.menu);
+                      pageRef.current = next.page;
+                      menuRef.current = next.menu;
+                      setSelection([]);
                       setFuture((v) => v.slice(1));
                     };
                     if (
                       window.dispatchEvent(
                         new CustomEvent("filemanager-before-navigate", {
                           cancelable: true,
-                          detail: { next, proceed },
+                          detail: { next: next.page, proceed },
                         }),
                       )
                     )
@@ -975,7 +1127,7 @@ function Desktop({ boot }: { boot: Bootstrap }) {
                     label={t("交换左右目录")}
                     onClick={() => {
                       const left = page.path;
-                      setPage({ type: "folder", path: rightPath });
+                      navigate({ type: "folder", path: rightPath });
                       setRightPath(left);
                     }}
                   >
@@ -1107,7 +1259,7 @@ function Desktop({ boot }: { boot: Bootstrap }) {
               </IconButton>
             </div>
           )}
-          <div className="main-content">
+          <div className="main-content" ref={contentRef}>
             {page.type === "folder" ? (
               <>
                 <div className="browsers">
@@ -1117,6 +1269,7 @@ function Desktop({ boot }: { boot: Bootstrap }) {
                   >
                     <FileBrowser
                       path={page.path}
+                      memoryKey={folderTabs.active + ":left"}
                       onNavigate={(path) => navigate({ type: "folder", path })}
                       active={activePane === 0 || !dual}
                       onActivate={() => setActivePane(0)}
@@ -1158,6 +1311,7 @@ function Desktop({ boot }: { boot: Bootstrap }) {
                       <div className="right-browser">
                         <FileBrowser
                           path={rightPath}
+                          memoryKey="right"
                           onNavigate={setRightPath}
                           active={activePane === 1}
                           onActivate={() => setActivePane(1)}
@@ -1179,7 +1333,7 @@ function Desktop({ boot }: { boot: Bootstrap }) {
             ) : page.type === "workspace" ? (
               <Workspaces id={page.id} />
             ) : page.type === "bookmarks" ? (
-              <Bookmarks page={page} />
+              <Bookmarks key={pageKey(page)} page={page} />
             ) : page.type === "clean" ? (
               <Clean
                 key={`${page.scope ?? ""}:${page.category ?? ""}`}

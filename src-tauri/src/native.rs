@@ -100,6 +100,9 @@ pub async fn action(
     args: Value,
 ) -> Result<Value> {
     match action.as_str() {
+        "update_status" | "update_check" | "update_install" | "update_restart" => {
+            crate::updates::action(app, core, window.label(), &action).await
+        }
         "open_with" => {
             let path = paths::decode(&core, filemanager_core::str_arg(&args, "path")?)?;
             on_main(&app, move || {

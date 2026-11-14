@@ -1,3 +1,5 @@
+import { useViewState } from "../hooks/useViewState";
+import { viewKey } from "../lib/view-memory";
 import { t } from "../i18n";
 import { useMemo, useState, type CSSProperties } from "react";
 import {
@@ -47,9 +49,12 @@ const colors = [
 ];
 export function Workspaces({ id }: { id: string }) {
   const app = useApp();
-  const [query, setQuery] = useState("");
-  const [archived, setArchived] = useState(false);
-  const [view, setView] = useState("cards");
+  const [query, setQuery] = useViewState("workspaces:list:query", "");
+  const [archived, setArchived] = useViewState(
+    "workspaces:list:archived",
+    false,
+  );
+  const [view, setView] = useViewState("workspaces:list:view", "cards");
   const [menu, setMenu] = useState<{
     x: number;
     y: number;
@@ -402,15 +407,24 @@ export function WorkspaceEditor({
 }
 function WorkspaceDetail({ workspace: w }: { workspace: Workspace }) {
   const app = useApp();
-  const [tab, setTab] = useState("all");
-  const [view, setView] = useState(w.view || "cards");
-  const [query, setQuery] = useState("");
+  const [tab, setTab] = useViewState(viewKey("workspace", w.id, "tab"), "all");
+  const [view, setView] = useViewState(
+    viewKey("workspace", w.id, "view"),
+    w.view || "cards",
+  );
+  const [query, setQuery] = useViewState(
+    viewKey("workspace", w.id, "query"),
+    "",
+  );
   const [menu, setMenu] = useState<{
     x: number;
     y: number;
     path: string;
   } | null>(null);
-  const [recursive, setRecursive] = useState(false);
+  const [recursive, setRecursive] = useViewState(
+    viewKey("workspace", w.id, "recursive"),
+    false,
+  );
   const entries = useAsync(async () => {
     const values = await Promise.allSettled(
       w.paths.map((path) => request<Entry>("file_info", { path })),
