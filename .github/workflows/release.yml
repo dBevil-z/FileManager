@@ -97,10 +97,11 @@ jobs:
           if ! gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --draft --title "FileManager ${RELEASE_TAG#v}" --notes-file "docs/releases/$RELEASE_TAG.md"
           fi
-          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" > /tmp/filemanager-release.json
+          # The REST tag endpoint only returns published releases; the CLI also resolves drafts.
+          gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json isDraft > /tmp/filemanager-release.json
           python3 - <<'PY'
           import json
-          if not json.load(open('/tmp/filemanager-release.json'))['draft']:
+          if not json.load(open('/tmp/filemanager-release.json'))['isDraft']:
               raise SystemExit('Release became public during the build; refuse to replace public assets.')
           PY
           gh release upload "$RELEASE_TAG" "target/release/bundle/publish/$RELEASE_TAG/"* --repo "$GITHUB_REPOSITORY" --clobber
