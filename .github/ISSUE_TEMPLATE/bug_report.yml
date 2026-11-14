@@ -1,0 +1,23 @@
+name: 问题反馈 · 中文
+description: 报告可以复现的问题
+title: "[Bug] "
+body:
+  - type: textarea
+    id: environment
+    attributes:
+      label: 环境
+      description: 应用版本、发行版、桌面与 X11/Wayland；可从“关于”复制诊断信息。
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤
+      description: 使用演示文件说明步骤、预期行为与实际结果。
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 截图与补充信息
+      description: 隐藏私人文件内容、访问密钥与其他个人信息。

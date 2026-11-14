@@ -1,0 +1,1 @@
+{"schema_version":1,"id":"official.inventory","name":"文件清单导出","version":"1.0.0","description":"将所选项目或当前目录导出为 CSV、Markdown、JSON，便于交接资料、做附件目录和归档。","author":"FileManager","category":"效率","permissions":["context:metadata"],"placements":["tools","context"],"inputs":[]}

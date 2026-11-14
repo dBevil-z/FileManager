@@ -1,0 +1,1 @@
+{"schema_version":1,"id":"example.hello","name":"我的第一个插件","version":"1.0.0","description":"演示上下文、参数与宿主表格。","author":"Your name","category":"示例","permissions":["context:metadata"],"placements":["tools","context"],"inputs":[{"id":"greeting","label":"问候语","type":"text","default":"你好"}]}

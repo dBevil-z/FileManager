@@ -1,0 +1,1 @@
+{"schema_version":1,"id":"official.text-inspector","name":"文本健康检查","version":"1.0.0","description":"检查所选 UTF-8 文本的行数、换行格式、BOM、行尾空格和超长行；不修改原文件。","author":"FileManager","category":"开发","permissions":["context:metadata","files:read"],"placements":["tools","context"],"inputs":[]}

@@ -1,0 +1,23 @@
+name: Bug report · English
+description: Report a reproducible issue
+title: "[Bug] "
+body:
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: App version, distribution, desktop, and X11/Wayland session. Diagnostics can be copied from About.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Use demonstration files and describe the expected and actual results.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Screenshots and context
+      description: Remove private document contents, access keys, and other personal information.

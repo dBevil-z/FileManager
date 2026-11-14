@@ -1,0 +1,31 @@
+[package]
+name = "filemanager-core"
+version = "0.2.0"
+edition = "2024"
+repository = "https://github.com/dBevil-z/FileManager"
+
+[dependencies]
+base64 = "0.22"
+chrono = { version = "0.4", features = ["serde"] }
+dirs = "6"
+libc = "0.2"
+rustix = { version = "1.1", features = ["fs", "process"] }
+rusqlite = { version = "0.37", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+uuid = { version = "1", features = ["v4"] }
+walkdir = "2"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "gif", "webp", "ico", "bmp", "tiff"] }
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls", "json"] }
+regex = "1"
+toml_edit = "0.22"
+tiny_http = "0.12"
+url = "2"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+kamadak-exif = "0.6"
+resvg = { version = "0.50", default-features = false, features = ["text", "system-fonts", "raster-images"] }
+rquickjs = { version = "0.14", default-features = false }
+
+[dev-dependencies]
+tempfile = "3"

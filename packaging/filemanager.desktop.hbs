@@ -1,0 +1,28 @@
+[Desktop Entry]
+Type=Application
+Name=FileManager
+GenericName=File Manager
+GenericName[zh_CN]=文件管理器
+Comment=Manage files, workspaces and bookmarks
+Comment[zh_CN]=浏览文件、整理下载与管理工作空间
+Exec={{exec}} %U
+Icon={{icon}}
+Terminal=false
+Categories=Utility;FileManager;
+MimeType=x-scheme-handler/filemanager;inode/directory;
+StartupWMClass=filemanager
+Actions=Shelf;Clean;NewWorkspace;
+
+[Desktop Action Shelf]
+Name=Drop Shelf
+Exec={{exec}} --shelf
+
+[Desktop Action Clean]
+Name=Smart Clean
+Name[zh_CN]=智能清理
+Exec={{exec}} --clean
+
+[Desktop Action NewWorkspace]
+Name=New Workspace
+Name[zh_CN]=新建工作空间
+Exec={{exec}} --new-workspace

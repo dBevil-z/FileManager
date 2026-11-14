@@ -1,0 +1,24 @@
+name: 功能建议 · 中文
+description: 提议工作流、插件能力或桌面适配
+title: "[Feature] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 想解决什么日常问题？
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: 可能属于哪一部分？
+      options:
+        - 文件浏览与操作
+        - 插件或插件 API
+        - 主题与交互
+        - Linux 兼容
+        - 其他
+  - type: textarea
+    id: idea
+    attributes:
+      label: 期望流程与例子

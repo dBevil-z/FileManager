@@ -1,0 +1,27 @@
+node_modules/
+dist/
+target/
+src-tauri/target/
+.superpowers/
+.cache/
+test-results/
+playwright-report/
+*.log
+.env.local
+src-tauri/gen/
+
+__pycache__/
+*.pyc
+
+# Local implementation notes and private runtime files
+docs/superpowers/
+docs/filemanager-0.2-plan.md
+.env
+.env.*
+!.env.example
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.db
+*.pem
+*.key

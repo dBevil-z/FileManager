@@ -1,0 +1,24 @@
+name: Feature request · English
+description: Propose a workflow, plugin capability, or desktop integration
+title: "[Feature] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What everyday problem would this solve?
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - File browsing and operations
+        - Plugins or plugin API
+        - Themes and interaction
+        - Linux compatibility
+        - Other
+  - type: textarea
+    id: idea
+    attributes:
+      label: Proposed workflow and examples

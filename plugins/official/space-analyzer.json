@@ -1,0 +1,1 @@
+{"schema_version":1,"id":"official.space-analyzer","name":"目录空间分析","version":"1.0.0","description":"按需统计目录大小，列出最大的 32 个文件；跳过符号链接和其他文件系统，不后台索引。","author":"FileManager","category":"存储","permissions":["context:metadata","directories:scan"],"placements":["tools","context"],"inputs":[]}

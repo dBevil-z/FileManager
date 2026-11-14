@@ -1,0 +1,17 @@
+[Desktop Entry]
+Name=FileManager
+Description=Find FileManager workspaces, collections, and bookmarks
+Name[zh_CN]=FileManager 文件搜索
+Description[zh_CN]=搜索工作空间、集合和书签
+Type=Service
+Icon=system-file-manager
+X-KDE-PluginInfo-Name=filemanager-runner
+X-KDE-PluginInfo-Version=0.2.0
+X-KDE-PluginInfo-EnabledByDefault=true
+X-Plasma-API=DBus
+X-Plasma-DBusRunner-Service=io.filemanager.Runner
+X-Plasma-DBusRunner-Path=/runner
+X-Plasma-Request-Actions-Once=true
+X-Plasma-Runner-Match-Regex=(?i)^filemanager(?:[[:space:]]|$)
+X-Plasma-Runner-Syntaxes=filemanager :q:
+X-Plasma-Runner-Syntax-Descriptions=Search workspaces, collections and bookmarks
