@@ -35,7 +35,7 @@ RPM 尚未发布；对应更新适配为将来打包预留，当前不宣称 RPM
 2. 运行前端、Rust/native、发布脚本测试和格式检查；执行 `python3 scripts/release.py check-version --tag v版本` 确认版本一致。
 3. 推送源码，创建并推送稳定版本标签，例如 `git tag -a v0.2.5 -m 'FileManager 0.2.5'`、`git push origin v0.2.5`。
 4. [发布工作流](../.github/workflows/release.yml) 先执行检查，再构建 deb/AppImage/用户安装包，生成版本绑定签名、`latest.json` 与 `SHA256SUMS`。安装包齐备后才公开 Release。
-5. 下载 Release 产物，核对签名/校验和和原生启动。可显式运行 Rust 的 `published_release_can_upgrade_an_isolated_user_install` 测试，对真实 GitHub 下载进行隔离升级验收。
+5. 下载 Release 产物，核对签名、校验和与原生启动。运行 [Linux 工作流](../.github/workflows/linux.yml) 并启用 `verify_public_update`，或将 `FILEMANAGER_UPDATE_BASELINE` 指向旧版可执行文件后运行 `cargo test -p filemanager published_release_can_upgrade_an_isolated_user_install --locked -- --ignored --nocapture`。测试覆盖公开更新源、签名下载、隔离安装和同版本检查。
 
 工作流也支持手动输入已存在的稳定标签。已公开版本禁止覆盖安装包；有修复时发布新版本。普通源码推送和 PR 只运行检查，不会发布 Release。构建路径与依赖使用官方源，仓库不配置个人镜像。
 

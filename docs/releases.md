@@ -35,7 +35,7 @@ The user-install directory is `$XDG_DATA_HOME/filemanager-desktop/bin`, or `~/.l
 2. Run frontend, Rust/native and release-script tests plus formatting. Run `python3 scripts/release.py check-version --tag vVERSION`.
 3. Push source, create an annotated stable tag, then push it; for example `git tag -a v0.2.5 -m 'FileManager 0.2.5'` and `git push origin v0.2.5`.
 4. The [release workflow](../.github/workflows/release.yml) runs checks, builds deb/AppImage/user assets, then generates version-bound signatures, `latest.json` and `SHA256SUMS`. It publishes only after all assets are available.
-5. Download and validate the published packages and native startup. Explicitly run the Rust `published_release_can_upgrade_an_isolated_user_install` test to exercise the real GitHub feed and an isolated upgrade.
+5. Download and validate the published packages and native startup. Run the [Linux workflow](../.github/workflows/linux.yml) with `verify_public_update` enabled, or set `FILEMANAGER_UPDATE_BASELINE` to an executable from an earlier version and run `cargo test -p filemanager published_release_can_upgrade_an_isolated_user_install --locked -- --ignored --nocapture`. This checks the public feed, signed download, isolated installation and current-version response.
 
 Manual workflow dispatch accepts an existing stable tag. Public assets are immutable: publish a new version for corrections. Regular source pushes and PRs run checks without publishing. Repository builds use official dependency sources, not a maintainer's private mirror.
 

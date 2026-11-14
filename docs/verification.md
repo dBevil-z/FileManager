@@ -1,4 +1,4 @@
-# Validation record — 0.2.3
+# Validation record — 0.2.4
 
 [English](verification.md) · [简体中文](verification.zh-CN.md)
 
@@ -8,18 +8,21 @@ Local validation date: **2026-11-14**. The tested environment is Linux x86_64, U
 
 The offline suite contains **46 frontend + 78 Rust/native + 6 release-script tests**. Updater coverage includes an actual local HTTP download with a version-bound signature, altered payload rejection, signed-version mismatch rejection, atomic replacement with a previous-binary backup, symlink rejection, concurrent-operation gating, UI check/progress/error/retry flows, and session persistence/job guards before restart. Two additional tests require release assets: cryptographic verification of all staged packages runs before publication, and a real-feed isolated upgrade runs after publication. Both are ignored by the offline suite.
 
-Release packaging and post-publication download evidence are recorded in the tagged Release and Actions run. The updater only connects after an explicit check. System package authorization is delegated to pkexec; no password is collected by FileManager.
+The [v0.2.4 release](https://github.com/dBevil-z/FileManager/releases/tag/v0.2.4) was signed and published by [GitHub Actions](https://github.com/dBevil-z/FileManager/actions/runs/43592371487). All eight public assets were downloaded; their checksums and all three installers' version-bound signatures matched. The published deb executable and AppImage (extract-and-run) both started in isolated GTK/WebKit sessions and retained a nested directory and filter from the demonstration session.
+
+The [online upgrade test](https://github.com/dBevil-z/FileManager/actions/runs/43595066982) read the public feed without authentication, downloaded and verified the user-install binary, replaced a temporary baseline, checked the previous-file backup and launched the result with `--version`. A check at the current version returned no update. The published native user installation also displayed **You are up to date** when checked through About. The first release with the updater is 0.2.4; earlier versions need a one-time manual installation. No system package was installed or upgraded during these isolated tests.
 
 ## Automated checks
 
-| Scope        | Local result | Coverage                                                                                                                                                              |
-| ------------ | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Rust core    | 66 passing   | File conflicts, cross-volume work/undo, legacy databases, cleanup, AI/MCP, preview budgets, plugin boundaries, remote pagination, batch transfers, and sync previews. |
-| Tauri/GTK    | 4 passing    | Argument normalization, file URIs, non-UTF-8 paths, deep-link routing, and a separate clipboard test selection.                                                       |
-| Frontend     | 46 passing   | Localization, tab restoration/navigation/closing, weighted caches, queued preview cancellation, theme contrast, and GitHub URLs.                                      |
-| Static/build | Passing      | TypeScript, Rustfmt, Prettier, whitespace checks, production frontend/native builds, and deb/AppImage packaging.                                                      |
+| Scope         | Local result | Coverage                                                                                                                                                                                     |
+| ------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Rust core     | 68 passing   | File conflicts, cross-volume work/undo, legacy databases, cleanup, AI/MCP, preview budgets, plugin boundaries, remote pagination, batch transfers, sync previews, and restart/job admission. |
+| Tauri/GTK     | 10 passing   | Argument normalization, file URIs, non-UTF-8 paths, deep-link routing, clipboard selections, signed downloads, version binding, and safe installation.                                       |
+| Frontend      | 46 passing   | Localization, tab restoration/navigation/closing, weighted caches, queued preview cancellation, theme contrast, and GitHub URLs.                                                             |
+| Release tools | 6 passing    | Stable versions, required artifacts, manifests, and checksum consistency.                                                                                                                    |
+| Static/build  | Passing      | TypeScript, Rustfmt, Prettier, whitespace checks, production frontend/native builds, and deb/AppImage packaging.                                                                             |
 
-Total: **106 local automated tests** (70 Rust and 36 frontend). The core includes 13 remote-storage tests; the remaining 53 cover jobs, agents, catalogs, files, plugins, previews, processes, and tools. GTK tests use isolated Xvfb, D-Bus, and clipboard selections. Upstream Markdown packages emit harmless empty-directive build warnings.
+Total: **130 local automated tests** (78 Rust/native, 46 frontend, and 6 release-script tests). The two release-asset tests were run separately as described above. GTK tests use isolated Xvfb, D-Bus, and clipboard selections. Upstream Markdown packages emit harmless empty-directive build warnings.
 
 Plugin tests include traversal, unknown grants, changed installed content, out-of-scope reads, descendant symlink escapes, loop cancellation, JS heap exhaustion, missing host capabilities, and spreadsheet-formula escaping. Atomics/shared buffers/promises are not exposed in the runtime.
 
