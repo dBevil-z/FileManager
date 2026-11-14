@@ -1,7 +1,8 @@
 [package]
 name = "filemanager-core"
-version = "0.2.0"
+version = "0.2.2"
 edition = "2024"
+rust-version = "1.91"
 repository = "https://github.com/dBevil-z/FileManager"
 
 [dependencies]
@@ -26,6 +27,20 @@ zip = { version = "2", default-features = false, features = ["deflate"] }
 kamadak-exif = "0.6"
 resvg = { version = "0.50", default-features = false, features = ["text", "system-fonts", "raster-images"] }
 rquickjs = { version = "0.14", default-features = false }
-
-[dev-dependencies]
+futures-util = "0.3"
+http = "1"
+opendal = { version = "0.59.5", default-features = false, features = ["layers-timeout", "services-s3", "services-oss"] }
+opendal-http-transport-reqwest = { version = "0.59.5", default-features = false }
+remote-http = { package = "reqwest", version = "0.13", default-features = false, features = ["rustls-no-provider"] }
+reqsign-aliyun-oss = "3.2"
+reqsign-aws-v4 = "3.3"
+reqsign-core = "3.2"
+quick-xml = { version = "0.42", features = ["serialize"] }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+rustls-native-certs = "0.8"
+secret-service = { version = "=5.1.0", default-features = false, features = ["rt-tokio-crypto-rust"] }
+ssh2 = "0.9.7"
+suppaftp = { version = "10.0.2", default-features = false, features = ["tokio-rustls-ring", "no-log"] }
 tempfile = "3"
+tokio = { version = "1", features = ["io-util", "net", "rt-multi-thread", "time"] }
+zeroize = { version = "1", features = ["derive"] }

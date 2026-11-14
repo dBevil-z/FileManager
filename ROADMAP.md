@@ -12,6 +12,8 @@ FileManager focuses on Linux desktop workflows. Items below distinguish implemen
 - [x] Six light/dark skins, custom accents, folder styles, and reduced motion.
 - [x] Plugin API v1: permission review, local installation, updates, enable/disable, removal, and context-menu integration.
 - [x] Checksums, file inventory, text inspection, and directory-space plugins.
+- [x] [Remote storage](docs/remote-storage.md): manage connections, browse folders, and transfer files over S3, OSS, SFTP, and FTP/FTPS.
+- [x] Remote cursor pagination, batch file/directory transfers, and directory sync previews (0.2.1).
 - [x] About, GitHub links, changelog, shortcuts, diagnostics, and bilingual project documentation.
 - [x] Local core/frontend/native tests and deb/AppImage smoke checks.
 - [ ] Broader long-running workload and desktop validation.

@@ -78,6 +78,7 @@ import {
   type PluginCatalog,
 } from "./features/Plugins";
 import { AboutPage } from "./features/About";
+import { RemoteStoragePage } from "./features/RemoteStorage";
 import { tabsReducer, restoreTabs } from "./lib/tabs";
 import { clearPreviewCache } from "./lib/previews";
 import { applySkin } from "./lib/themes";
@@ -370,6 +371,7 @@ function Desktop({ boot }: { boot: Bootstrap }) {
     (
       options: {
         directories?: boolean;
+        filesOnly?: boolean;
         multiple?: boolean;
         initial?: string;
       } = {},
@@ -516,7 +518,7 @@ function Desktop({ boot }: { boot: Bootstrap }) {
           ) {
             jobsSeen.current.add(job.id);
             refreshAll();
-            if (job.error) notify(job.error, job.status === "failed");
+            if (job.error) notify(t(job.error), job.status === "failed");
             else if (
               (job.result as OperationResult | undefined)?.requires_confirmation
             )
@@ -781,6 +783,7 @@ function Desktop({ boot }: { boot: Bootstrap }) {
     settings,
     page,
     plugins: pluginCatalog.data?.plugins || [],
+    jobs,
     runPlugin: (id, selected, directory) => {
       const plugin = pluginCatalog.data?.plugins.find(
         (p) => p.manifest.id === id && p.enabled,
@@ -835,6 +838,7 @@ function Desktop({ boot }: { boot: Bootstrap }) {
               clean: t("智能清理"),
               packages: t("软件包"),
               plugins: t("插件中心"),
+              remote: t("远程存储"),
               about: t("关于 FileManager"),
               agents: "AI Agents",
               system: t("关于本机"),
@@ -1186,6 +1190,8 @@ function Desktop({ boot }: { boot: Bootstrap }) {
               <Packages />
             ) : page.type === "plugins" ? (
               <PluginsPage />
+            ) : page.type === "remote" ? (
+              <RemoteStoragePage />
             ) : page.type === "about" ? (
               <AboutPage />
             ) : page.type === "agents" ? (
@@ -1210,7 +1216,7 @@ function Desktop({ boot }: { boot: Bootstrap }) {
           </div>
           <footer className="app-status">
             <span className="status-dot" />
-            <span>{t("本地文件")}</span>
+            <span>{t(page.type === "remote" ? "远程存储" : "本地文件")}</span>
             <span className="status-divider" />
             <span>FileManager {boot.version}</span>
             <div className="flex-1" />
@@ -1254,6 +1260,10 @@ function Desktop({ boot }: { boot: Bootstrap }) {
                             clean_scan: t("扫描存储"),
                             tidy_apply: t("整理文件"),
                             packages: t("读取软件包"),
+                            remote_upload: t("远程上传"),
+                            remote_download: t("远程下载"),
+                            remote_transfer: t("批量远程传输"),
+                            remote_sync_preview: t("目录同步预览"),
                           } as Record<string, string>
                         )[job.op] || t("后台任务")}
                       </strong>
@@ -1280,7 +1290,8 @@ function Desktop({ boot }: { boot: Bootstrap }) {
                       )}
                     </div>
                     <p>
-                      {job.error || job.current || t("等待操作…")}
+                      {(job.error ? t(job.error) : job.current) ||
+                        t("等待操作…")}
                       {job.status === "running" && job.bytes > 0
                         ? ` · ${formatBytes(job.bytes)}`
                         : ""}

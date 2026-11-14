@@ -18,7 +18,8 @@ impl Core {
             CREATE TABLE IF NOT EXISTS kv (name TEXT PRIMARY KEY, value TEXT NOT NULL, revision INTEGER NOT NULL DEFAULT 1);
             CREATE TABLE IF NOT EXISTS journal (id TEXT PRIMARY KEY,label TEXT NOT NULL,payload TEXT NOT NULL,status TEXT NOT NULL,created INTEGER NOT NULL);
             CREATE INDEX IF NOT EXISTS journal_time ON journal(created);
-            CREATE TABLE IF NOT EXISTS observed (path TEXT PRIMARY KEY,first_seen INTEGER NOT NULL);").map_err(err)?;
+            CREATE TABLE IF NOT EXISTS observed (path TEXT PRIMARY KEY,first_seen INTEGER NOT NULL);
+            CREATE TABLE IF NOT EXISTS remote_profiles (id TEXT PRIMARY KEY, value TEXT NOT NULL);").map_err(err)?;
         Ok(conn)
     }
     pub(crate) fn get_value(&self, key: &str) -> Result<Value> {

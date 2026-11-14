@@ -249,6 +249,33 @@ export function AboutPage() {
             </>
           ) : notes === "release" ? (
             <div className="release-notes">
+              <h3>0.2.2 · FileManager</h3>
+              <ul>
+                <li>
+                  {t("MinIO 支持账号密码登录，Bucket 和 Region 可留空。")}
+                </li>
+                <li>
+                  {t(
+                    "支持列出有权限的所有桶、分页、直接进入桶和自动识别 Region。",
+                  )}
+                </li>
+              </ul>
+              <h3>0.2.1 · FileManager</h3>
+              <ul>
+                <li>
+                  {t("新增 S3/OSS、SFTP、FTP/FTPS 远程存储与系统钥匙串凭据。")}
+                </li>
+                <li>
+                  {t(
+                    "支持游标分页、跨页选择、批量文件与目录传输、逐项结果和取消。",
+                  )}
+                </li>
+                <li>
+                  {t(
+                    "新增按方向比较目录的同步预览，区分缺失项、大小差异和类型冲突。",
+                  )}
+                </li>
+              </ul>
               <h3>0.2.0 · FileManager</h3>
               <ul>
                 <li>

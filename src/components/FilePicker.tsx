@@ -18,11 +18,13 @@ import { FileIcon } from "./FileIcon";
 export function FilePicker({
   initial,
   directories,
+  filesOnly,
   multiple = true,
   done,
 }: {
   initial?: string;
   directories?: boolean;
+  filesOnly?: boolean;
   multiple?: boolean;
   done: (paths: string[]) => void;
 }) {
@@ -43,9 +45,19 @@ export function FilePicker({
           : [p],
     );
   }
+  function openFolder(p: string) {
+    if (!multiple) setSelected([]);
+    setPath(p);
+  }
   return (
     <Modal
-      title={directories ? t("选择文件夹") : t("添加文件与文件夹")}
+      title={
+        directories
+          ? t("选择文件夹")
+          : filesOnly
+            ? t("选择文件")
+            : t("添加文件与文件夹")
+      }
       wide
       onClose={() => done([])}
       footer={
@@ -73,18 +85,18 @@ export function FilePicker({
         <IconButton
           label={t("上级目录")}
           disabled={!data?.parent}
-          onClick={() => data?.parent && setPath(data.parent)}
+          onClick={() => data?.parent && openFolder(data.parent)}
         >
           <ChevronLeft size={17} />
         </IconButton>
-        <IconButton label={t("主目录")} onClick={() => setPath(boot.home)}>
+        <IconButton label={t("主目录")} onClick={() => openFolder(boot.home)}>
           <Home size={16} />
         </IconButton>
         <form
           onSubmit={(e) => {
             e.preventDefault();
             const v = new FormData(e.currentTarget).get("path");
-            if (typeof v === "string") setPath(v);
+            if (typeof v === "string") openFolder(v);
           }}
         >
           <input
@@ -108,7 +120,7 @@ export function FilePicker({
           {boot.places.map((p) => (
             <button
               key={p.id}
-              onClick={() => setPath(p.path)}
+              onClick={() => openFolder(p.path)}
               className={path === p.path ? "selected" : ""}
             >
               <Folder size={16} />
@@ -134,9 +146,21 @@ export function FilePicker({
                   tabIndex={0}
                   key={e.path}
                   className={`picker-file ${selected.includes(e.path) ? "selected" : ""}`}
-                  onClick={() => toggle(e.path)}
+                  aria-selected={selected.includes(e.path)}
+                  onKeyDown={(event) => {
+                    if (
+                      event.target !== event.currentTarget ||
+                      !["Enter", " "].includes(event.key)
+                    )
+                      return;
+                    event.preventDefault();
+                    if (isFolder(e) && (event.key === "Enter" || filesOnly))
+                      openFolder(e.path);
+                    else toggle(e.path);
+                  }}
+                  onClick={() => (!filesOnly || !isFolder(e)) && toggle(e.path)}
                   onDoubleClick={() =>
-                    isFolder(e) ? setPath(e.path) : done([e.path])
+                    isFolder(e) ? openFolder(e.path) : done([e.path])
                   }
                 >
                   <FileIcon entry={e} />
@@ -146,7 +170,7 @@ export function FilePicker({
                       label={t("打开 {0}", e.name)}
                       onClick={(ev) => {
                         ev.stopPropagation();
-                        setPath(e.path);
+                        openFolder(e.path);
                       }}
                     >
                       <FolderOpen size={15} />

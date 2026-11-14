@@ -24,17 +24,30 @@ pub fn mark_running() {
         }
     });
 }
-pub fn checkpoint() -> Result<()> {
+pub(crate) fn cancelled() -> bool {
     CURRENT.with(|j| {
-        if j.borrow()
+        j.borrow()
             .as_ref()
             .is_some_and(|j| j.cancelled.load(Ordering::Relaxed))
-        {
-            Err("操作已取消；已完成部分可撤销，源文件已保留".into())
-        } else {
-            Ok(())
-        }
     })
+}
+pub(crate) fn partial_result(value: &Value) {
+    CURRENT.with(|j| {
+        if let Some(job) = j.borrow().as_ref() {
+            if let Ok(mut state) = job.state.lock() {
+                state["result_bytes"] =
+                    json!(serde_json::to_vec(value).map(|v| v.len()).unwrap_or(0));
+                state["result"] = value.clone();
+            }
+        }
+    });
+}
+pub fn checkpoint() -> Result<()> {
+    if cancelled() {
+        Err("操作已取消；已完成部分可撤销，源文件已保留".into())
+    } else {
+        Ok(())
+    }
 }
 pub fn progress(current: &str, bytes: u64, completed: u64, total: u64) {
     CURRENT.with(|j| {
@@ -72,6 +85,10 @@ pub fn start(core: &Core, args: &Value) -> Result<Value> {
             | "agent_projects"
             | "search"
             | "plugin_run"
+            | "remote_upload"
+            | "remote_download"
+            | "remote_transfer"
+            | "remote_sync_preview"
     ) {
         return Err("此操作不支持后台队列".into());
     }
@@ -105,6 +122,7 @@ pub fn start(core: &Core, args: &Value) -> Result<Value> {
         jobs.insert(id.clone(), job.clone());
     }
     let core = core.clone();
+    let op = op.to_owned();
     let input = json!({"op":op,"args":args["args"]});
     std::thread::spawn(move || {
         CURRENT.with(|c| *c.borrow_mut() = Some(job.clone()));
@@ -144,6 +162,24 @@ pub fn start(core: &Core, args: &Value) -> Result<Value> {
             Err(_) => {
                 s["status"] = json!("failed");
                 s["error"] = json!("任务异常中止，请检查操作历史")
+            }
+        }
+        if op == "remote_transfer" && s["result"]["total"].is_u64() {
+            let summary = s["result"].clone();
+            s["total"] = summary["total"].clone();
+            s["completed"] = json!(
+                summary["total"]
+                    .as_u64()
+                    .unwrap_or(0)
+                    .saturating_sub(summary["pending"].as_u64().unwrap_or(0))
+            );
+            s["bytes"] = summary["bytes"].clone();
+            if s["status"] == "done"
+                && (summary["failed"].as_u64().unwrap_or(0) > 0
+                    || summary["pending"].as_u64().unwrap_or(0) > 0)
+            {
+                s["status"] = json!("failed");
+                s["error"] = json!("部分项目传输失败，请查看逐项结果");
             }
         }
         s["finished_at"] = json!(chrono::Utc::now().timestamp_millis());

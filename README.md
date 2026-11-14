@@ -9,7 +9,7 @@
 <p align="center">
   <a href="https://github.com/dBevil-z/FileManager/actions/workflows/linux.yml"><img src="https://github.com/dBevil-z/FileManager/actions/workflows/linux.yml/badge.svg" alt="Linux checks" /></a>
   <img src="https://img.shields.io/badge/platform-Linux-8b73ef" alt="Platform: Linux" />
-  <img src="https://img.shields.io/badge/version-0.2.0_preview-6b8fcc" alt="Version: 0.2.0 preview" />
+  <img src="https://img.shields.io/badge/version-0.2.2_preview-6b8fcc" alt="Version: 0.2.2 preview" />
 </p>
 
 Browse files, collect project references, preview documents, and add focused tools through plugins. FileManager brings tabs, dual panes, workspaces, bookmarks, and a personal visual style into one Linux application.
@@ -22,17 +22,18 @@ Browse files, collect project references, preview documents, and add focused too
 
 ## Features
 
-| Area                 | What you can do                                                                                                                                        |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| File browsing        | Switch between icons, list, and columns; restore folder tabs; use dual panes, breadcrumbs, path completion, filtering, and virtualized rows.           |
-| File operations      | Copy, move, duplicate, rename in batches, create links, review name conflicts, cancel queued work, and recover through persistent undo and Trash.      |
-| Preview and writing  | Inspect images, PDF pages, media, text, and supported office documents. Edit Markdown with split preview, local images, and unsaved-change protection. |
-| Project organization | Group files, folders, and links into reference-based workspaces. Manage bookmarks, collections, tags, and favourites.                                  |
-| Storage tools        | Review downloads, organize by category, inspect duplicates and large files, and browse installed packages. Cleanup remains a reviewed action.          |
-| Developer tools      | Inspect Git status, open terminals and editors, manage local AI project/MCP configuration, review supported usage logs, and inspect local services.    |
-| Personalization      | Choose six light/dark skins, folder colours and symbols, a system theme, shortcuts, and reduced motion.                                                |
-| Desktop integration  | Use Drop Shelf, the system tray, optional login startup, CLI/deep links, and KDE KRunner/D-Bus integration.                                            |
-| Extensions           | Install, review, enable, update, or remove local plugins. Launch tools from the plugin center or a file's context menu.                                |
+| Area                 | What you can do                                                                                                                                                                     |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| File browsing        | Switch between icons, list, and columns; restore folder tabs; use dual panes, breadcrumbs, path completion, filtering, and virtualized rows.                                        |
+| File operations      | Copy, move, duplicate, rename in batches, create links, review name conflicts, cancel queued work, and recover through persistent undo and Trash.                                   |
+| Preview and writing  | Inspect images, PDF pages, media, text, and supported office documents. Edit Markdown with split preview, local images, and unsaved-change protection.                              |
+| Project organization | Group files, folders, and links into reference-based workspaces. Manage bookmarks, collections, tags, and favourites.                                                               |
+| Storage tools        | Review downloads, organize by category, inspect duplicates and large files, and browse installed packages. Cleanup remains a reviewed action.                                       |
+| Remote storage       | Browse and transfer files in the background over MinIO, S3-compatible storage, Alibaba Cloud OSS, SFTP, FTP, and explicit FTPS. See the [connection guide](docs/remote-storage.md). |
+| Developer tools      | Inspect Git status, open terminals and editors, manage local AI project/MCP configuration, review supported usage logs, and inspect local services.                                 |
+| Personalization      | Choose six light/dark skins, folder colours and symbols, a system theme, shortcuts, and reduced motion.                                                                             |
+| Desktop integration  | Use Drop Shelf, the system tray, optional login startup, CLI/deep links, and KDE KRunner/D-Bus integration.                                                                         |
+| Extensions           | Install, review, enable, update, or remove local plugins. Launch tools from the plugin center or a file's context menu.                                                             |
 
 See the [feature matrix](docs/features.md) for implementation evidence and platform limits.
 
@@ -63,7 +64,7 @@ A signed online marketplace and downloadable theme packs are [planned](ROADMAP.m
 
 ### Build from source
 
-Install a stable Rust toolchain supporting the 2024 edition, Node.js 24, and pnpm 10. On Ubuntu/Debian, install the development libraries:
+Install Rust 1.91 or newer, Node.js 24, and pnpm 10. On Ubuntu/Debian, install the development libraries:
 
 ```bash
 sudo apt update
@@ -87,11 +88,11 @@ pnpm tauri build
 ./scripts/install-user.sh
 
 # Alternatively, install the Debian package:
-sudo apt install ./target/release/bundle/deb/FileManager_0.2.0_amd64.deb
+sudo apt install ./target/release/bundle/deb/FileManager_0.2.2_amd64.deb
 
 # Or run the generated AppImage:
-chmod +x target/release/bundle/appimage/FileManager_0.2.0_amd64.AppImage
-./target/release/bundle/appimage/FileManager_0.2.0_amd64.AppImage
+chmod +x target/release/bundle/appimage/FileManager_0.2.2_amd64.AppImage
+./target/release/bundle/appimage/FileManager_0.2.2_amd64.AppImage
 ```
 
 Choose one installation method to avoid duplicate launchers. Search for **FileManager** in your application menu after installing. The repository's Actions workflow can build downloadable CI artifacts when run manually or for a version tag; a source push does not create a GitHub Release.

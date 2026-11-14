@@ -6,7 +6,7 @@ Thanks for helping improve FileManager. Start with the [README](README.md), [roa
 
 ## Development
 
-Install the Linux dependencies listed in the README, a Rust toolchain supporting edition 2024, Node.js 24, and pnpm 10:
+Install the Linux dependencies listed in the README, Rust 1.91 or newer, Node.js 24, and pnpm 10:
 
 ```bash
 pnpm install --frozen-lockfile

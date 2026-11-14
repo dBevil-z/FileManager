@@ -6,7 +6,7 @@
 
 ## 开发
 
-按照 README 安装 Linux 依赖，准备支持 Rust 2024 edition 的工具链、Node.js 24 与 pnpm 10：
+按照 README 安装 Linux 依赖，准备 Rust 1.91 或更新的工具链、Node.js 24 与 pnpm 10：
 
 ```bash
 pnpm install --frozen-lockfile

@@ -1,4 +1,4 @@
-# Validation record — 0.2
+# Validation record — 0.2.2
 
 [English](verification.md) · [简体中文](verification.zh-CN.md)
 
@@ -6,18 +6,41 @@ Local validation date: **2026-11-14**. The tested environment is Linux x86_64, U
 
 ## Automated checks
 
-| Scope        | Local result | Coverage                                                                                                                                                   |
-| ------------ | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Rust core    | 53 passing   | File conflicts, cross-volume work/undo, legacy databases, cleanup, AI/MCP, preview budgets, converter groups, plugin boundaries, and retained job results. |
-| Tauri/GTK    | 4 passing    | Argument normalization, file URIs, non-UTF-8 paths, deep-link routing, and a separate clipboard test selection.                                            |
-| Frontend     | 11 passing   | Localization, tab restoration/navigation/closing, weighted caches, queued preview cancellation, theme contrast, and GitHub URLs.                           |
-| Static/build | Passing      | TypeScript, Rustfmt, Prettier, whitespace checks, production frontend/native builds, and deb/AppImage packaging.                                           |
+| Scope        | Local result | Coverage                                                                                                                                                              |
+| ------------ | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Rust core    | 66 passing   | File conflicts, cross-volume work/undo, legacy databases, cleanup, AI/MCP, preview budgets, plugin boundaries, remote pagination, batch transfers, and sync previews. |
+| Tauri/GTK    | 4 passing    | Argument normalization, file URIs, non-UTF-8 paths, deep-link routing, and a separate clipboard test selection.                                                       |
+| Frontend     | 11 passing   | Localization, tab restoration/navigation/closing, weighted caches, queued preview cancellation, theme contrast, and GitHub URLs.                                      |
+| Static/build | Passing      | TypeScript, Rustfmt, Prettier, whitespace checks, production frontend/native builds, and deb/AppImage packaging.                                                      |
 
-Total: **68 local automated tests**. The core groups are 2 job, 8 agent, 3 catalog, 18 file, 8 plugin, 5 preview, 1 process, and 8 tool tests. Upstream Markdown packages emit harmless empty-directive build warnings.
+Total: **81 local automated tests** (70 Rust and 11 frontend). The core includes 13 remote-storage tests; the remaining 53 cover jobs, agents, catalogs, files, plugins, previews, processes, and tools. GTK tests use isolated Xvfb, D-Bus, and clipboard selections. Upstream Markdown packages emit harmless empty-directive build warnings.
 
 Plugin tests include traversal, unknown grants, changed installed content, out-of-scope reads, descendant symlink escapes, loop cancellation, JS heap exhaustion, missing host capabilities, and spreadsheet-formula escaping. Atomics/shared buffers/promises are not exposed in the runtime.
 
-## Memory methodology
+## 0.2.2 MinIO accounts and bucket acceptance
+
+Two isolated MinIO services used the default region and custom `lab-region-1`; profiles left region blank. Root and ordinary local IAM usernames/passwords authenticated successfully. An ordinary account paged through 106 buckets; a restricted account listed only its one authorized bucket and was denied access to another. A read-only account lacking `GetBucketLocation` permission also entered its authorized bucket in the custom region.
+
+Scoped recursive upload/download preserved empty folders and verified approximately 9 MB of content without writing into another bucket. Transfer reports and sync previews rejected cross-bucket tokens. Automated fixtures additionally cover ListBuckets continuation tokens, signing-region hints/retries, region XML with declarations, fixed-bucket scope, restricted direct entry, incorrect passwords, and console HTML responses without disclosing credentials or raw server error text.
+
+Browser acceptance used actual sign-in requests for inline errors, empty bucket/region, 106-bucket paging, entry/return/direct navigation, and an English dark layout at 900 pixels.
+
+Both final 0.2.2 deb and AppImage signed in with an ordinary MinIO account in isolated native GTK/WebKit windows, leaving bucket and region blank, then listed buckets and read files from a custom-region bucket. Native D-Bus reported 0.2.2 for each.
+
+## 0.2.1 remote-storage acceptance
+
+Real local MinIO, SFTP, FTP, and explicit FTPS services were tested individually with isolated Home, application state, and credentials:
+
+- A 6,007-entry directory per protocol, read across 44 pages of 137 entries, with no omissions or duplicates; wrong-scope and expired cursors were rejected.
+- Batch and recursive directory upload/download, empty directories/files, and a 9 MiB multipart file, with matching round-trip content hashes.
+- Existing-file preservation, continued work after individual failures, paginated/filterable reports, and rejection of symlink destination paths.
+- Read-only sync previews with missing entries, size/time differences, type/ancestor conflicts, and explicit unverified-content labels for equal sizes.
+
+Rust tests additionally cover cancellation retaining completed files and marking unprocessed entries, temporary-file cleanup, aborting started S3 multipart uploads, OSS V4 signing, profile/credential isolation, replaced upload sources, and preview snapshot boundaries.
+
+Browser checks cover multi-file/folder picking, cross-page selection and navigation, transfer reports, a preview exceeding 6,000 entries, Chinese/English, and a 900-pixel dark layout. The final deb passed native GTK/WebKit file-picker multi-upload and selected download with two byte-identical files. The final AppImage started in extract-and-run mode and successfully browsed SFTP. Actual Alibaba and other cloud buckets still require endpoint-specific acceptance.
+
+## Historical 0.2 memory observations
 
 Samples read `/proc/.../smaps_rollup` for the application and its WebKit descendants. PSS apportions shared pages; summed RSS counts shared pages repeatedly. These are workload-specific observations, not universal memory ceilings.
 
@@ -65,7 +88,7 @@ Earlier local acceptance also covered the three browser views, dual panes, PDF p
 
 ## Packages and upgrade
 
-The final local `FileManager_0.2.0_amd64.deb` and `FileManager_0.2.0_amd64.AppImage` passed isolated native checks for:
+The earlier local 0.2.0 deb/AppImage passed isolated native checks for:
 
 1. Startup while the default Shelf shortcut was occupied.
 2. Warm instance navigation using a caller-relative directory.
@@ -73,7 +96,11 @@ The final local `FileManager_0.2.0_amd64.deb` and `FileManager_0.2.0_amd64.AppIm
 4. Raw non-UTF-8 paths through single-instance transport.
 5. Lazy creation of the native Shelf window.
 
-The installed executable matched the tested deb's executable byte-for-byte; D-Bus reported 0.2.0. Existing catalog/settings values were hash-checked across the update, and legacy state was kept in place. The system's default directory application remained Dolphin.
+The final 0.2.1 deb/AppImage were built and passed the native remote-storage acceptance above. The installed 0.2.0 instance exited through its tray action before a user-level atomic replacement with the tested deb's executable. The new process and D-Bus both report 0.2.1, and the installed executable matches the tested deb byte-for-byte. The previous executable, desktop integration files, and a consistent SQLite snapshot were backed up with a rollback script.
+
+Catalog/settings hashes match across this update. The session, operation history, and legacy data directory remain in place; no fixture connections were added to the user's database. The default directory application remains Dolphin.
+
+The installed 0.2.1 instance subsequently exited through its tray action and was replaced with the tested 0.2.2 deb executable. The new process and D-Bus report 0.2.2 and its executable hash matches the tested package. Catalog, settings, session, and remote-profile hashes and operation-history counts are preserved. A separate backup contains the prior 0.2.1 executable, desktop integration, and consistent SQLite snapshot; Dolphin remains the default directory application.
 
 Local generated package hashes are written to `target/release/bundle/SHA256SUMS`; generated packages and private runtime evidence are not source-control inputs. A source push is separate from a tagged/published GitHub Release.
 

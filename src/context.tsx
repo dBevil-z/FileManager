@@ -4,6 +4,7 @@ import type {
   Bootstrap,
   Catalog,
   Entry,
+  Job,
   Page,
   Settings,
   OperationResult,
@@ -14,6 +15,7 @@ export type AppContextValue = {
   settings: Settings;
   page: Page;
   plugins: PluginItem[];
+  jobs: Job[];
   runPlugin: (id: string, selection?: string[], directory?: string) => void;
   openTab: (path: string) => void;
   navigate: (page: Page) => void;
@@ -32,6 +34,7 @@ export type AppContextValue = {
   ) => Promise<boolean>;
   pickFiles: (options?: {
     directories?: boolean;
+    filesOnly?: boolean;
     multiple?: boolean;
     initial?: string;
   }) => Promise<string[]>;

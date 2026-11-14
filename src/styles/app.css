@@ -4083,3 +4083,436 @@
   color: var(--text);
   box-shadow: 0 1px 2px #0001;
 }
+
+.remote-layout {
+  display: grid;
+  grid-template-columns: minmax(160px, 220px) minmax(0, 1fr);
+  align-items: start;
+  gap: 20px;
+}
+.remote-connections,
+.remote-browser {
+  min-width: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--bg);
+}
+.remote-connections {
+  padding: 8px;
+  max-height: min(65vh, 620px);
+  overflow: auto;
+}
+.remote-connections-head,
+.remote-browser-head,
+.remote-toolbar,
+.remote-actions,
+.remote-row-actions,
+.remote-list-filter,
+.remote-pagination,
+.remote-transfer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.remote-connections-head {
+  justify-content: space-between;
+  padding: 0 6px 4px;
+  color: var(--text-2);
+}
+.remote-connections-head h2 {
+  font-size: 12px;
+  font-weight: 600;
+}
+.remote-connection {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 46px;
+  padding: 7px 9px;
+  border-radius: 7px;
+  text-align: left;
+  color: var(--text-2);
+}
+.remote-connection:hover,
+.remote-connection[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--text);
+}
+.remote-connection[aria-pressed="true"] {
+  box-shadow: inset 2px 0 var(--accent);
+}
+.remote-connection > span {
+  flex: 1;
+  min-width: 0;
+}
+.remote-connection strong,
+.remote-connection small,
+.remote-profile-info > p {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.remote-connection small,
+.remote-profile-info > p {
+  color: var(--muted);
+  font-size: 11px;
+}
+.remote-connection small {
+  margin-top: 2px;
+}
+.remote-browser-head,
+.remote-toolbar {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.remote-profile-info {
+  flex: 1;
+  min-width: 0;
+}
+.remote-profile-info h2 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  overflow-wrap: anywhere;
+}
+.remote-profile-info > p {
+  margin-top: 3px;
+}
+.remote-toolbar {
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.remote-breadcrumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+  color: var(--text-2);
+}
+.remote-breadcrumbs button:not(.icon-button) {
+  min-height: 30px;
+  padding: 4px 6px;
+  max-width: 155px;
+  border-radius: 5px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.remote-breadcrumbs button:hover,
+.remote-entry:is(button):hover {
+  background: var(--surface);
+}
+.remote-breadcrumbs button[aria-current] {
+  color: var(--text);
+  font-weight: 650;
+}
+.remote-actions {
+  flex-wrap: wrap;
+}
+.remote-list-filter,
+.remote-pagination {
+  justify-content: space-between;
+  padding: 9px 14px;
+}
+.remote-list-filter input {
+  max-width: 240px;
+}
+.remote-note {
+  padding: 0 14px 8px;
+  font-size: 11px;
+}
+.remote-table-wrap {
+  overflow-x: auto;
+}
+.remote-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+.remote-table :is(th, td) {
+  padding: 5px 10px;
+  text-align: left;
+  border-top: 1px solid var(--line);
+}
+.remote-table th {
+  height: 31px;
+  color: var(--text-2);
+  font-size: 11px;
+  font-weight: 600;
+}
+.remote-table th:nth-child(2) {
+  width: 85px;
+}
+.remote-table th:nth-child(3) {
+  width: 155px;
+}
+.remote-table th:last-child {
+  width: 88px;
+}
+.remote-table td {
+  height: 38px;
+}
+.remote-table td:nth-child(2),
+.remote-table td:nth-child(3) {
+  font-size: 11px;
+  color: var(--text-2);
+}
+.remote-entry {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  min-height: 28px;
+  text-align: left;
+  padding: 3px 4px;
+  border-radius: 5px;
+}
+.remote-entry span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.remote-row-actions {
+  gap: 3px;
+}
+.remote-bucket-nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.remote-bucket-nav strong {
+  overflow-wrap: anywhere;
+}
+.remote-bucket-hint {
+  padding: 10px 14px 0;
+  font-size: 12px;
+}
+.remote-bucket-open {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 14px;
+}
+.remote-bucket-open input {
+  flex: 1;
+  min-width: 150px;
+}
+.remote-buckets-table th:nth-child(2) {
+  width: 175px;
+}
+.remote-pagination {
+  justify-content: center;
+}
+.remote-transfer {
+  flex-wrap: wrap;
+  padding: 9px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.remote-transfer > div {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  min-width: 150px;
+}
+.remote-transfer > div > span {
+  color: var(--text-2);
+  overflow-wrap: anywhere;
+}
+.remote-transfer progress {
+  width: min(180px, 100%);
+  accent-color: var(--accent);
+}
+.remote-form fieldset {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px 16px;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+.remote-form .field {
+  margin: 0;
+}
+.remote-form .field input,
+.remote-form .select-wrap,
+.remote-form select {
+  width: 100%;
+}
+.remote-form :is(.remote-form-span, .remote-check) {
+  grid-column: 1 / -1;
+}
+.remote-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 24px;
+}
+.remote-check input {
+  width: 15px;
+  height: 15px;
+  margin: 1px 0 0;
+  accent-color: var(--accent);
+}
+.remote-check small {
+  display: block;
+  color: var(--muted);
+  margin-top: 3px;
+}
+.remote-form-error,
+.remote-form-success {
+  padding: 8px 10px;
+  margin-bottom: 12px;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  color: var(--danger);
+}
+.remote-form-success {
+  color: var(--success);
+}
+.remote-selection-bar,
+.remote-path-input,
+.remote-sync-filter {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.remote-selection-bar {
+  padding: 8px 14px;
+  border-top: 1px solid var(--line);
+  color: var(--text-2);
+}
+.remote-selection-bar small {
+  margin-left: auto;
+}
+.remote-table.remote-selectable :is(th, td) {
+  width: auto;
+}
+.remote-col-check {
+  width: 34px;
+}
+.remote-col-size {
+  width: 85px;
+}
+.remote-col-date {
+  width: 145px;
+}
+.remote-col-actions {
+  width: 82px;
+}
+.remote-selectable input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent);
+  vertical-align: middle;
+}
+.remote-selectable tr[aria-selected="true"] {
+  background: var(--surface);
+}
+.remote-table.remote-selectable td:nth-child(2) {
+  font-size: inherit;
+  color: var(--text);
+}
+.remote-table.remote-selectable :is(td:nth-child(3), td:nth-child(4)) {
+  font-size: 11px;
+  color: var(--text-2);
+}
+.remote-sync-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 180px;
+  gap: 8px 16px;
+}
+.remote-sync-form .field {
+  margin: 0;
+}
+.remote-sync-form .field input {
+  width: 100%;
+}
+.remote-path-input {
+  flex-wrap: nowrap;
+}
+.remote-path-input input {
+  min-width: 0;
+  flex: 1;
+}
+.remote-path-input .button {
+  flex-shrink: 0;
+}
+.remote-sync-target {
+  grid-column: 1 / -1;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  margin: 0 0 8px;
+}
+.remote-sync-filter {
+  margin: 12px 0;
+}
+.remote-sync-filter input {
+  flex: 1;
+  min-width: 120px;
+}
+.remote-dialog-summary {
+  margin: 12px 0;
+  font-weight: 600;
+}
+.remote-scan-current {
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  color: var(--muted);
+}
+.remote-table.remote-sync-table :is(th, td),
+.remote-table.remote-report-table :is(th, td) {
+  width: auto;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+.remote-table.remote-sync-table {
+  min-width: 540px;
+}
+.remote-table.remote-sync-table th:first-child {
+  width: 40%;
+}
+.remote-table.remote-sync-table th:last-child {
+  width: 29%;
+}
+.remote-table.remote-report-table {
+  min-width: 480px;
+}
+.remote-table.remote-report-table th:first-child {
+  width: 38%;
+}
+.remote-table.remote-report-table th:nth-child(2) {
+  width: 75px;
+}
+.remote-table.remote-report-table td {
+  font-size: 12px;
+}
+@media (max-width: 1050px) {
+  .remote-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .remote-connections {
+    max-height: 180px;
+  }
+}
+@media (max-width: 620px) {
+  .remote-form fieldset {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .remote-sync-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .remote-selectable {
+    min-width: 580px;
+  }
+}

@@ -54,3 +54,5 @@ Linux sending uses KDE Connect or the mail application. Apple AirDrop and the re
 ## 0.2 extensions
 
 The plugin center adds a bundled catalog, local imports, permission/digest review, lifecycle controls, QuickJS API v1, four independent tools, and consistent results/report export. Installed tools run from the center or context menus without a resident engine. See the [SDK](plugins.md) and [roadmap](../ROADMAP.md).
+
+[Remote storage](remote-storage.md) in the sidebar connects to S3-compatible storage, Alibaba Cloud OSS, SFTP, and FTP/FTPS. It supports browsing, read-only connections, and cancellable background transfers. See the connection guide for validation and protocol limits.

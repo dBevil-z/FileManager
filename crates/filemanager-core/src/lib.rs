@@ -13,6 +13,7 @@ pub mod paths;
 pub mod plugins;
 pub mod preview;
 pub mod process;
+mod remote;
 pub mod store;
 pub mod system;
 pub mod trash;
@@ -45,6 +46,7 @@ pub struct Core {
     pub(crate) job_slots: Arc<(Mutex<usize>, Condvar)>,
     pub(crate) media: Arc<Mutex<std::collections::HashMap<String, PathBuf>>>,
     pub(crate) preview_gate: Arc<Mutex<()>>,
+    remote: Arc<remote::State>,
 }
 
 impl Core {
@@ -70,6 +72,7 @@ impl Core {
             job_slots: Arc::new((Mutex::new(0), Condvar::new())),
             media: Arc::new(Mutex::new(std::collections::HashMap::new())),
             preview_gate: Arc::new(Mutex::new(())),
+            remote: Arc::new(remote::State::default()),
         };
         core.connection()?;
         Ok(core)
@@ -105,6 +108,21 @@ impl Core {
         jobs::checkpoint()?;
         jobs::mark_running();
         match op {
+            "remote_profiles" => remote::profiles(self),
+            "remote_save" => remote::save(self, &args),
+            "remote_remove" => remote::remove(self, &args),
+            "remote_test" => remote::test(self, &args),
+            "remote_list" => remote::list(self, &args),
+            "remote_mkdir" => remote::mkdir(self, &args),
+            "remote_delete" => remote::delete(self, &args),
+            "remote_upload" => remote::upload(self, &args),
+            "remote_download" => remote::download(self, &args),
+            "remote_list_close" => remote::list_close(self, &args),
+            "remote_transfer" => remote::transfer(self, &args),
+            "remote_transfer_report" => remote::transfer_report(self, &args),
+            "remote_sync_preview" => remote::sync_preview(self, &args),
+            "remote_sync_page" => remote::sync_page(self, &args),
+            "remote_sync_close" => remote::sync_close(self, &args),
             "operate_check" => {
                 let mut a = args.clone();
                 a["dry_run"] = json!(true);

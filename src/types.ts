@@ -99,6 +99,7 @@ export type Page =
   | { type: "clean"; scope?: string; category?: string }
   | { type: "packages" }
   | { type: "plugins" }
+  | { type: "remote" }
   | { type: "about" }
   | { type: "agents" }
   | { type: "system" }

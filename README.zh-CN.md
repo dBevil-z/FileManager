@@ -9,7 +9,7 @@
 <p align="center">
   <a href="https://github.com/dBevil-z/FileManager/actions/workflows/linux.yml"><img src="https://github.com/dBevil-z/FileManager/actions/workflows/linux.yml/badge.svg" alt="Linux 检查" /></a>
   <img src="https://img.shields.io/badge/platform-Linux-8b73ef" alt="平台：Linux" />
-  <img src="https://img.shields.io/badge/version-0.2.0_preview-6b8fcc" alt="版本：0.2.0 预览版" />
+  <img src="https://img.shields.io/badge/version-0.2.2_preview-6b8fcc" alt="版本：0.2.2 预览版" />
 </p>
 
 浏览文件、收集项目资料、预览文档，再用插件处理日常小任务。FileManager 将多标签、双栏、工作空间、书签和可定制外观放进同一个 Linux 桌面应用。
@@ -22,17 +22,18 @@
 
 ## 功能
 
-| 分类       | 可以做什么                                                                                      |
-| ---------- | ----------------------------------------------------------------------------------------------- |
-| 文件浏览   | 图标、列表、分栏视图；多标签会话恢复、双栏、面包屑、路径补全、过滤和虚拟列表。                  |
-| 文件操作   | 复制、移动、副本、批量重命名、链接、同名复核、任务取消，以及持久化撤销和回收站恢复。            |
-| 预览与写作 | 查看图像、PDF 页面、媒体、文本和受支持的 Office 文档；Markdown 支持分屏、本地图片和未保存保护。 |
-| 项目组织   | 工作空间保存文件、文件夹与链接的引用；管理书签、集合、标签和收藏。                              |
-| 存储工具   | 查看下载概览、按类别整理、检查重复与大文件、浏览已安装软件包；清理经过复核后执行。              |
-| 开发工具   | 只读 Git 状态、终端和编辑器、本地 AI 项目/MCP 配置、受支持日志的用量统计与本机服务。            |
-| 外观定制   | 六套明暗皮肤、自定义强调色、文件夹颜色与符号、跟随系统、快捷键和减少动态效果。                  |
-| 桌面集成   | Drop Shelf、托盘、可选登录启动、CLI/深层链接，以及 KDE KRunner/D-Bus。                          |
-| 扩展能力   | 插件安装审核、启停、更新、卸载；从插件中心或文件右键菜单运行工具。                              |
+| 分类       | 可以做什么                                                                                                                           |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| 文件浏览   | 图标、列表、分栏视图；多标签会话恢复、双栏、面包屑、路径补全、过滤和虚拟列表。                                                       |
+| 文件操作   | 复制、移动、副本、批量重命名、链接、同名复核、任务取消，以及持久化撤销和回收站恢复。                                                 |
+| 预览与写作 | 查看图像、PDF 页面、媒体、文本和受支持的 Office 文档；Markdown 支持分屏、本地图片和未保存保护。                                      |
+| 项目组织   | 工作空间保存文件、文件夹与链接的引用；管理书签、集合、标签和收藏。                                                                   |
+| 存储工具   | 查看下载概览、按类别整理、检查重复与大文件、浏览已安装软件包；清理经过复核后执行。                                                   |
+| 远程存储   | 连接 MinIO、S3 兼容存储、阿里云 OSS、SFTP、FTP 和显式 FTPS；浏览目录并在后台上传、下载。见[接入指南](docs/remote-storage.zh-CN.md)。 |
+| 开发工具   | 只读 Git 状态、终端和编辑器、本地 AI 项目/MCP 配置、受支持日志的用量统计与本机服务。                                                 |
+| 外观定制   | 六套明暗皮肤、自定义强调色、文件夹颜色与符号、跟随系统、快捷键和减少动态效果。                                                       |
+| 桌面集成   | Drop Shelf、托盘、可选登录启动、CLI/深层链接，以及 KDE KRunner/D-Bus。                                                               |
+| 扩展能力   | 插件安装审核、启停、更新、卸载；从插件中心或文件右键菜单运行工具。                                                                   |
 
 具体实现、验证证据与平台差异见[功能对照](docs/features.zh-CN.md)。
 
@@ -63,7 +64,7 @@
 
 ### 从源码运行
 
-准备支持 Rust 2024 edition 的稳定 Rust 工具链、Node.js 24 与 pnpm 10。Ubuntu/Debian 开发依赖：
+准备 Rust 1.91 或更新的稳定工具链、Node.js 24 与 pnpm 10。Ubuntu/Debian 开发依赖：
 
 ```bash
 sudo apt update
@@ -87,11 +88,11 @@ pnpm tauri build
 ./scripts/install-user.sh
 
 # 也可安装生成的 Debian 软件包：
-sudo apt install ./target/release/bundle/deb/FileManager_0.2.0_amd64.deb
+sudo apt install ./target/release/bundle/deb/FileManager_0.2.2_amd64.deb
 
 # 或运行生成的 AppImage：
-chmod +x target/release/bundle/appimage/FileManager_0.2.0_amd64.AppImage
-./target/release/bundle/appimage/FileManager_0.2.0_amd64.AppImage
+chmod +x target/release/bundle/appimage/FileManager_0.2.2_amd64.AppImage
+./target/release/bundle/appimage/FileManager_0.2.2_amd64.AppImage
 ```
 
 选择一种安装方式，避免重复菜单入口。安装后在应用菜单搜索 **FileManager**。仓库 Actions 支持手动或版本标签触发打包并下载 CI 产物；推送源码本身不会创建 GitHub Release。

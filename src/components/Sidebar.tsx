@@ -6,6 +6,7 @@ import {
   ChevronDown,
   ChevronRight,
   CircleHelp,
+  Cloud,
   Code2,
   Download,
   Folder,
@@ -257,6 +258,7 @@ export function Sidebar({
             ))}
           </>
         )}
+        {item({ type: "remote" }, t("远程存储"), Cloud)}
         {heading(t("工具"), "tools")}
         {!groups.tools && (
           <>
