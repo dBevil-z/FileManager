@@ -4,6 +4,11 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      verify_public_update:
+        description: Test the signed update from the current public GitHub release
+        type: boolean
+        default: false
   workflow_call:
     inputs:
       ref:
@@ -45,3 +50,13 @@ jobs:
         env:
           GTK_USE_PORTAL: "0"
           NO_AT_BRIDGE: "1"
+      - name: Verify public download and isolated upgrade
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.verify_public_update }}
+        run: |
+          baseline="$RUNNER_TEMP/filemanager-baseline"
+          cat > "$baseline" <<'SH'
+          #!/bin/sh
+          printf '%s\n' 'FileManager 0.0.0'
+          SH
+          chmod 700 "$baseline"
+          FILEMANAGER_UPDATE_BASELINE="$baseline" cargo test -p filemanager published_release_can_upgrade_an_isolated_user_install --locked -- --ignored --nocapture

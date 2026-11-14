@@ -438,8 +438,15 @@ mod tests {
     }
 
     fn test_app(public_key: &str) -> tauri::App<tauri::test::MockRuntime> {
+        test_app_at_version(public_key, "0.2.3")
+    }
+
+    fn test_app_at_version(
+        public_key: &str,
+        version: &str,
+    ) -> tauri::App<tauri::test::MockRuntime> {
         let mut context = tauri::test::mock_context(tauri::test::noop_assets());
-        context.package_info_mut().version = "0.2.3".parse().unwrap();
+        context.package_info_mut().version = version.parse().unwrap();
         context.config_mut().plugins.0.insert("updater".into(), json!({
             "pubkey":public_key, "requireSignedVersion":true,
             "endpoints":["https://github.com/dBevil-z/FileManager/releases/latest/download/latest.json"]
@@ -564,24 +571,52 @@ mod tests {
     #[ignore = "downloads the current official GitHub release; run explicitly after publication"]
     fn published_release_can_upgrade_an_isolated_user_install() {
         let config: Value = serde_json::from_str(include_str!("../tauri.conf.json")).unwrap();
-        let app = test_app(config["plugins"]["updater"]["pubkey"].as_str().unwrap());
-        let update = tauri::async_runtime::block_on(
-            app.updater_builder()
-                .target("linux-x86_64-user")
-                .timeout(Duration::from_secs(60))
-                .build()
-                .unwrap()
-                .check(),
-        )
-        .unwrap()
-        .expect("0.2.3 baseline should find the published release");
-        assert_eq!(update.version, env!("CARGO_PKG_VERSION"));
-        validate_artifact(&update.download_url, &update.version, Mode::User).unwrap();
-        let bytes = tauri::async_runtime::block_on(update.download(|_, _| {}, || {})).unwrap();
-        let directory = tempfile::tempdir().unwrap();
-        let path = directory.path().join("filemanager");
+        let public_key = config["plugins"]["updater"]["pubkey"].as_str().unwrap();
         let baseline = std::env::var_os("FILEMANAGER_UPDATE_BASELINE")
             .expect("set FILEMANAGER_UPDATE_BASELINE to the local previous-version binary");
+        let old = std::process::Command::new(&baseline)
+            .arg("--version")
+            .output()
+            .unwrap();
+        assert!(old.status.success());
+        let old = String::from_utf8(old.stdout).unwrap();
+        let old_version = old.trim().strip_prefix("FileManager ").unwrap();
+        let check = |version| {
+            let app = test_app_at_version(public_key, version);
+            tauri::async_runtime::block_on(
+                app.updater_builder()
+                    .target("linux-x86_64-user")
+                    .timeout(Duration::from_secs(60))
+                    .build()
+                    .unwrap()
+                    .check(),
+            )
+            .unwrap()
+        };
+        assert!(
+            check(env!("CARGO_PKG_VERSION")).is_none(),
+            "current release must be up to date"
+        );
+        let mut update = check(old_version).expect("baseline should find the published release");
+        assert_eq!(update.version, env!("CARGO_PKG_VERSION"));
+        validate_artifact(&update.download_url, &update.version, Mode::User).unwrap();
+        println!("Official feed checked: {old_version} → {}", update.version);
+        update.timeout = Some(Duration::from_secs(15 * 60));
+        let mut downloaded = 0;
+        let mut reported = 0;
+        let bytes = tauri::async_runtime::block_on(update.download(
+            |chunk, _| {
+                downloaded += chunk;
+                if downloaded - reported >= 4 * 1024 * 1024 {
+                    println!("Downloaded {} MiB", downloaded / (1024 * 1024));
+                    reported = downloaded;
+                }
+            },
+            || {},
+        ))
+        .unwrap();
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("filemanager");
         fs::copy(&baseline, &path).unwrap();
         install_user_binary(&path, &bytes).unwrap();
         assert_eq!(
@@ -598,7 +633,7 @@ mod tests {
             format!("FileManager {}", env!("CARGO_PKG_VERSION"))
         );
         println!(
-            "Official GitHub feed, HTTPS download, version-bound signature, atomic replacement, rollback copy and new binary version verified."
+            "Official GitHub feed, HTTPS download, version-bound signature, atomic replacement, rollback copy, new binary version and current-version check verified."
         );
     }
 }
