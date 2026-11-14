@@ -98,7 +98,7 @@ pnpm desktop
 ### 打包与安装
 
 ```bash
-pnpm tauri build
+pnpm tauri build --no-sign
 
 # 当前用户安装，不改变系统默认文件管理器。
 ./scripts/install-user.sh
@@ -110,6 +110,8 @@ sudo apt install ./target/release/bundle/deb/FileManager_0.2.4_amd64.deb
 chmod +x target/release/bundle/appimage/FileManager_0.2.4_amd64.AppImage
 ./target/release/bundle/appimage/FileManager_0.2.4_amd64.AppImage
 ```
+
+本地源码构建使用 `--no-sign`，无需维护者私钥；正式发行版由发布工作流签名。
 
 选择一种安装方式，避免重复菜单入口。安装后在应用菜单搜索 **FileManager**。稳定版本标签会在检查通过后触发签名 Release 发布，普通源码推送只运行检查。见[维护者指南](docs/releases.zh-CN.md)。
 

@@ -98,7 +98,7 @@ Optional integrations use **Poppler** for PDF previews, **FFmpeg** for media inf
 ### Package and install
 
 ```bash
-pnpm tauri build
+pnpm tauri build --no-sign
 
 # Install for the current user; leaves the system default file manager unchanged.
 ./scripts/install-user.sh
@@ -110,6 +110,8 @@ sudo apt install ./target/release/bundle/deb/FileManager_0.2.4_amd64.deb
 chmod +x target/release/bundle/appimage/FileManager_0.2.4_amd64.AppImage
 ./target/release/bundle/appimage/FileManager_0.2.4_amd64.AppImage
 ```
+
+Local source builds use `--no-sign` and do not require the maintainer signing key. Official releases are signed by the publishing workflow.
 
 Choose one installation method to avoid duplicate launchers. Search for **FileManager** in your application menu after installing. Stable version tags trigger the signed Release workflow after checks pass. Ordinary source pushes run checks without publishing. See the [maintainer guide](docs/releases.md).
 

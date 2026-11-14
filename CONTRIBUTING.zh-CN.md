@@ -23,7 +23,7 @@ cargo fmt --all --check
 cargo test -p filemanager-core
 # 使用独立显示环境，避免受当前桌面剪贴板服务影响：
 GTK_USE_PORTAL=0 NO_AT_BRIDGE=1 xvfb-run -a dbus-run-session -- cargo test -p filemanager
-pnpm tauri build
+pnpm tauri build --no-sign
 ```
 
 原生剪贴板测试使用独立 selection，不覆盖用户剪贴板；文件测试使用临时数据和回收站。`FILEMANAGER_TEST_HOME`、`FILEMANAGER_DATA_DIR` 用于隔离开发场景，不要把真实文档当作破坏性测试夹具。

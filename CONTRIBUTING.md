@@ -23,7 +23,7 @@ cargo fmt --all --check
 cargo test -p filemanager-core
 # Isolate native clipboard tests from the active desktop:
 GTK_USE_PORTAL=0 NO_AT_BRIDGE=1 xvfb-run -a dbus-run-session -- cargo test -p filemanager
-pnpm tauri build
+pnpm tauri build --no-sign
 ```
 
 Native clipboard tests use a separate selection rather than overwriting the user's clipboard. Filesystem tests use temporary data and Trash directories. `FILEMANAGER_TEST_HOME` and `FILEMANAGER_DATA_DIR` isolate development scenarios; do not use real documents as destructive test fixtures.

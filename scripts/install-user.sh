@@ -4,7 +4,7 @@ set -euo pipefail
 project_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 filemanager_binary=${1:-"$project_dir/target/release/filemanager"}
 if [[ ! -f "$filemanager_binary" || ! -x "$filemanager_binary" ]]; then
-  printf 'Executable not found: %s\nBuild with pnpm tauri build first.\n' "$filemanager_binary" >&2
+  printf 'Executable not found: %s\nBuild with pnpm tauri build --no-sign first.\n' "$filemanager_binary" >&2
   exit 1
 fi
 filemanager_data=${XDG_DATA_HOME:-"$HOME/.local/share"}
