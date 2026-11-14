@@ -314,7 +314,9 @@ mod tests {
         )
         .unwrap();
         cancel(&core, &started).unwrap();
-        *core.job_slots.0.lock().unwrap() = 0;
+        // Keep the simulated running jobs in place until cancellation finishes.
+        // Resetting their count here races with the cancelled worker releasing
+        // its own slot and can underflow the counter.
         core.job_slots.1.notify_all();
         let deadline = Instant::now() + std::time::Duration::from_secs(3);
         loop {
@@ -329,6 +331,7 @@ mod tests {
             );
             std::thread::sleep(std::time::Duration::from_millis(10));
         }
+        assert_eq!(*core.job_slots.0.lock().unwrap(), 3);
         assert_eq!(std::fs::read_to_string(source).unwrap(), "keep me");
         assert_eq!(std::fs::read_dir(target).unwrap().count(), 0);
     }
