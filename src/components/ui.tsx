@@ -96,12 +96,14 @@ export function Modal({
   onClose,
   wide = false,
   footer,
+  className,
 }: {
   title: string;
   children: ReactNode;
   onClose: () => void;
   wide?: boolean;
   footer?: ReactNode;
+  className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const closeRef = useRef(onClose);
@@ -158,7 +160,9 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`modal ${wide ? "wide" : ""}`}
+        className={["modal", wide && "wide", className]
+          .filter(Boolean)
+          .join(" ")}
         ref={ref}
       >
         <header>

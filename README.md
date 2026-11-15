@@ -72,8 +72,8 @@ A signed online marketplace and downloadable theme packs are [planned](ROADMAP.m
 
 [**Download FileManager for Linux**](https://github.com/dBevil-z/FileManager/releases/latest) · [Release notes](https://github.com/dBevil-z/FileManager/releases) · [Update guide](docs/releases.md)
 
-- **Ubuntu/Debian:** download the `.deb` and install it with `sudo apt install ./FileManager_0.2.4_amd64.deb`.
-- **AppImage:** download, mark executable and run. FUSE-free launch: `./FileManager_0.2.4_amd64.AppImage --appimage-extract-and-run`.
+- On **Ubuntu/Debian**, download the `.deb` and install it with `sudo apt install ./FileManager_0.2.5_amd64.deb`.
+- To run the **AppImage**, download it and mark it executable. If FUSE is unavailable, run `./FileManager_0.2.5_amd64.AppImage --appimage-extract-and-run`.
 - Check **Settings / About → Software updates** for newer stable releases. Downloads are signed; installation and restart remain explicit. Versions before 0.2.4 need a one-time manual upgrade.
 
 Packages are built on Ubuntu 24.04. AppImage does not remove the host glibc baseline or guarantee every Linux distribution. `SHA256SUMS` and version-bound updater signatures accompany each release.
@@ -104,11 +104,11 @@ pnpm tauri build --no-sign
 ./scripts/install-user.sh
 
 # Alternatively, install the Debian package:
-sudo apt install ./target/release/bundle/deb/FileManager_0.2.4_amd64.deb
+sudo apt install ./target/release/bundle/deb/FileManager_0.2.5_amd64.deb
 
 # Or run the generated AppImage:
-chmod +x target/release/bundle/appimage/FileManager_0.2.4_amd64.AppImage
-./target/release/bundle/appimage/FileManager_0.2.4_amd64.AppImage
+chmod +x target/release/bundle/appimage/FileManager_0.2.5_amd64.AppImage
+./target/release/bundle/appimage/FileManager_0.2.5_amd64.AppImage
 ```
 
 Local source builds use `--no-sign` and do not require the maintainer signing key. Official releases are signed by the publishing workflow.

@@ -2,6 +2,12 @@
 
 [English](CHANGELOG.md) · [简体中文](CHANGELOG.zh-CN.md)
 
+## 0.2.5 — Drop Shelf and file picker refinements · 2026-11-15
+
+- Resize the Drop Shelf window and restore its size when it reopens after idle cleanup within the same session.
+- Wrap Shelf items across rows, show up to two lines of each filename, and reveal the remove button on keyboard focus.
+- Fit the file picker to shorter windows, with scrolling for the folder list, file list and selected items.
+
 ## 0.2.4 — Signed releases and updates · 2026-11-14
 
 - Publish Linux deb, AppImage and user-install artifacts with SHA-256 checksums, a GitHub update feed and signatures bound to the release version.

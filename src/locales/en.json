@@ -967,6 +967,8 @@
     "项目路线图": "Project roadmap",
     "项目文档": "Project documentation",
     "项目源码许可证尚未选定；依赖保留各自许可证。": "A source license has not yet been selected. Dependencies retain their own licenses.",
+    "拖放架可调整窗口大小，暂存文件自动换行，文件名最多显示两行。": "Resize the Drop Shelf window. Staged files wrap across rows and filenames use up to two lines.",
+    "文件选择器适应较矮的窗口，目录、文件和已选项可分别滚动。": "The file picker fits shorter windows, with separate scrolling for folders, files and selected items.",
     "按需检查官方版本，下载验证签名后安装，由你选择重启。": "Check official releases on demand, verify signatures before installation and choose when to restart.",
     "统一 GitHub 仓库、文档、反馈与发行版入口，提供中英发布说明。": "Consistent repository, documentation, feedback and release links, with bilingual release notes.",
     "网页书签元数据与远程封面、Markdown 中的远程图片可能访问对应网站。更新仅在主动检查时连接官方 GitHub Releases，安装包在签名验证后使用。GitHub 和外部帮助使用系统浏览器打开。无后台遥测、自动上传或云端文件索引。": "Bookmark metadata, remote covers and Markdown images may contact their websites. Update checks contact official GitHub Releases only on demand, and artifacts are used after signature verification. GitHub and external help open in your system browser. There is no background telemetry, automatic upload or cloud file index."

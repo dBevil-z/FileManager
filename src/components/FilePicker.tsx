@@ -59,6 +59,7 @@ export function FilePicker({
             : t("添加文件与文件夹")
       }
       wide
+      className="file-picker"
       onClose={() => done([])}
       footer={
         <>

@@ -72,8 +72,8 @@
 
 [**下载 Linux 版 FileManager**](https://github.com/dBevil-z/FileManager/releases/latest) · [版本说明](https://github.com/dBevil-z/FileManager/releases) · [更新指南](docs/releases.zh-CN.md)
 
-- **Ubuntu/Debian：** 下载 `.deb`，执行 `sudo apt install ./FileManager_0.2.4_amd64.deb`。
-- **AppImage：** 下载后赋予执行权限并运行。无需 FUSE 的启动方式：`./FileManager_0.2.4_amd64.AppImage --appimage-extract-and-run`。
+- **Ubuntu/Debian** 下载 `.deb` 后执行 `sudo apt install ./FileManager_0.2.5_amd64.deb`。
+- **AppImage** 下载后赋予执行权限并运行。FUSE 不可用时，执行 `./FileManager_0.2.5_amd64.AppImage --appimage-extract-and-run`。
 - 在 **设置 / 关于 → 软件更新** 中检查稳定版本，验证签名后由你选择安装、重启。0.2.4 以前的版本需要先手动升级一次。
 
 安装包在 Ubuntu 24.04 构建；AppImage 仍依赖宿主 glibc 基线，不代表已兼容所有 Linux 发行版。每个 Release 包含 `SHA256SUMS` 和绑定版本号的更新签名。
@@ -104,11 +104,11 @@ pnpm tauri build --no-sign
 ./scripts/install-user.sh
 
 # 也可安装生成的 Debian 软件包：
-sudo apt install ./target/release/bundle/deb/FileManager_0.2.4_amd64.deb
+sudo apt install ./target/release/bundle/deb/FileManager_0.2.5_amd64.deb
 
 # 或运行生成的 AppImage：
-chmod +x target/release/bundle/appimage/FileManager_0.2.4_amd64.AppImage
-./target/release/bundle/appimage/FileManager_0.2.4_amd64.AppImage
+chmod +x target/release/bundle/appimage/FileManager_0.2.5_amd64.AppImage
+./target/release/bundle/appimage/FileManager_0.2.5_amd64.AppImage
 ```
 
 本地源码构建使用 `--no-sign`，无需维护者私钥；正式发行版由发布工作流签名。

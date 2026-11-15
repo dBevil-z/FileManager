@@ -231,6 +231,19 @@ export function AboutPage() {
             </>
           ) : notes === "release" ? (
             <div className="release-notes">
+              <h3>0.2.5 · FileManager</h3>
+              <ul>
+                <li>
+                  {t(
+                    "拖放架可调整窗口大小，暂存文件自动换行，文件名最多显示两行。",
+                  )}
+                </li>
+                <li>
+                  {t(
+                    "文件选择器适应较矮的窗口，目录、文件和已选项可分别滚动。",
+                  )}
+                </li>
+              </ul>
               <h3>0.2.4 · FileManager</h3>
               <ul>
                 <li>

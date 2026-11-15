@@ -10,6 +10,7 @@ use tauri::{Emitter, Manager};
 #[derive(Default)]
 pub struct NativeState {
     settings: Mutex<Value>,
+    shelf_size: Mutex<Option<tauri::LogicalSize<f64>>>,
     tray_actions: Mutex<std::collections::HashMap<String, Value>>,
     pending_route: Mutex<Option<Value>>,
     registered_shortcut: Mutex<Option<String>>,
